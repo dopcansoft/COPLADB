@@ -55,6 +55,7 @@ import copladb.DAO.pagosProyectadosDAO;
 import copladb.DTO.pagosProyectados;
 import copladb.DAO.pagosRealizadosDAO;
 import copladb.DTO.pagosRealizados;
+import copladb.DTO.tarjetasAsigPorSemanaConPagosDTO;
 import copladb.DAO.tarjetaDAO;
 import copladb.DTO.tarjeta;
 import copladb.DAO.tarjetaAsignadasDAO;
@@ -113,6 +114,7 @@ public class COPLADB extends Application {
     List<detalle_venta> lstDetVenta= new ArrayList<>();
     ObservableList<pagosProyectados> lstobPagProyectados = FXCollections.observableArrayList();
     ObservableList<pagosRealizados> lstobPagRealizados = FXCollections.observableArrayList();
+    ObservableList<tarjetasAsigPorSemanaConPagosDTO> lstTarjetasAsigPorSemanaConPagos = FXCollections.observableArrayList();
     List<cliente> lstCliente = new ArrayList<>();
     List<vendedor> lstVendedor = new ArrayList<>();
     List<String> lstWhere = new ArrayList<>();
@@ -4891,11 +4893,22 @@ public class COPLADB extends Application {
         Label lbTitulo = new Label("ESTADO DE LOS COBRADORES");
         lbTitulo.getStyleClass().add("titulo-vista");
         lbTitulo.setAlignment(Pos.CENTER);
+        
+        ObservableList<XYChart.Data> aList = FXCollections.observableArrayList(
+            new XYChart.Data("Sem. 1", 7),
+            new XYChart.Data("Sem. 2", 10),
+            new XYChart.Data("Sem. 3", 5),
+            new XYChart.Data("Sem. 4", 2),
+            new XYChart.Data("Sem. 5", 15),
+            new XYChart.Data("Sem. 6", 21)
+        );
+        //ObservableList<String> categorias = FXCollections.observableArrayList();
+        ObservableList<String> categorias = FXCollections.observableArrayList("Sem. 1", "Sem. 2", "Sem. 3", "Sem. 4", "Sem. 5", "Sem. 6");
 
         // Componentes de Seleccion
         Label lbCoBradores = new Label("Cobradores: ");
         lstWhere.clear();
-        lstWhere.add("idCobradores is not null");
+        lstWhere.add("idCobrador is not null");
         ComboBox cbCobradores = new ComboBox(FXCollections.observableList(cobraDAO.consultarNombreCobradores(lstWhere)));
         cbCobradores.setPrefWidth(180);
         Label lbYear = new Label("Año: ");
@@ -4911,25 +4924,33 @@ public class COPLADB extends Application {
         tfSemanaFinal.setPrefWidth(220);
 
         Button btnBuscar = new Button ("Buscar");
+        btnBuscar.setOnAction((event) -> {
+            lstWhere.clear();
+            lstWhere.add("pr.idTarjeta is not null");
+            lstWhere.add("pr.Tipo in('Parcialidad', 'Abono')");
+            lstWhere.add("ta.idCobrador = 1");              
+            lstWhere.add("cast(semana as integer ) between 48 and 50");              
+            lstTarjetasAsigPorSemanaConPagos = FXCollections.observableList(tarAsigDAO.consultarTarjetasPagosPorSemana(lstWhere));
+            if (!aList.isEmpty())aList.clear();
+            if (!categorias.isEmpty())categorias.clear();
+            for (tarjetasAsigPorSemanaConPagosDTO t : lstTarjetasAsigPorSemanaConPagos){
+                String strSemana = "Sem.";
+                String concat = strSemana.concat(t.getSemana());
+                System.out.println("Semana: "+concat);
+                categorias.add(concat);
+                int totalPagosSemana = t.getCuantosPagos();
+                System.out.println("TotalporSemana: "+String.valueOf(totalPagosSemana) );
+                aList.add(new XYChart.Data(concat, totalPagosSemana));
+            }
+            
+        });
         
         // Grafica para evaluar el desempeño del cobrador por semana
         Label lbGraficaCobradores = new Label("Grafica Cobradores: ");
         ObservableList<XYChart.Series> seriesList = FXCollections.observableArrayList();
-           lstWhere.clear();
-        lstWhere.add("idCobradores is not null");
-        //ComboBox cbCobradores = new ComboBox(FXCollections.observableList(cobraDAO.consultarNombreCobradores(lstWhere)));     
         
-        ObservableList<XYChart.Data> aList = FXCollections.observableArrayList(
-            new XYChart.Data("Sem. 1", 7),
-            new XYChart.Data("Sem. 2", 10),
-            new XYChart.Data("Sem. 3", 5),
-            new XYChart.Data("Sem. 4", 2),
-            new XYChart.Data("Sem. 5", 15),
-            new XYChart.Data("Sem. 6", 21)
-        );
+ 
         seriesList.add(new XYChart.Series("Cant. Semanas", aList));
-        //ObservableList<String> categorias = FXCollections.observableArrayList();
-        ObservableList<String> categorias = FXCollections.observableArrayList("Sem. 1", "Sem. 2", "Sem. 3", "Sem. 4", "Sem. 5", "Sem. 6");
 
         CategoryAxis xAx = new CategoryAxis(categorias);
         Axis yAxis = new NumberAxis();// ("Cantidad", 0, 50, 5);

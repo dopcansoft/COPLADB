@@ -20,7 +20,7 @@ public class tarjetasAsigPorSemanaConPagosDTO {
     private String semana;
     private String fechaPago;
     private float sumaMontos;
-    private float cuantosPagos;
+    private int cuantosPagos;
     private String Tipo;
 
     public int getIdCobrador() {
@@ -103,11 +103,11 @@ public class tarjetasAsigPorSemanaConPagosDTO {
         this.sumaMontos = sumaMontos;
     }
 
-    public float getCuantosPagos() {
+    public int getCuantosPagos() {
         return cuantosPagos;
     }
 
-    public void setCuantosPagos(float cuantosPagos) {
+    public void setCuantosPagos(int cuantosPagos) {
         this.cuantosPagos = cuantosPagos;
     }
 

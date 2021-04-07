@@ -131,7 +131,7 @@ public class tarjetaAsignadasDAO {
         //group by semana
         String sql = "select ta.idCobrador, ta.EstadoRecibido, ta.EstadoEntregado, ta.idTarjeta as numTarjeta, pr.idTarjeta, strfTime('%Y',pr.Fecha) as year,  "
                 + "strfTime('%W',pr.Fecha) as semana, sum(pr.Monto) as sumaMontos, count(pr.Monto) as cuantosPagos, pr.Tipo  "
-                + "from tarjetasAsignadas ta left join Pagos_realizados pr on ta.idTarjeta = pr.idTarjeta where "+Filtro.toString();
+                + "from tarjetasAsignadas ta left join Pagos_realizados pr on ta.idTarjeta = pr.idTarjeta where "+Filtro.toString()+ " group by semana";
         System.out.println(sql);
         try (
             Connection con = conecta.conectaDB();

@@ -4922,15 +4922,22 @@ public class COPLADB extends Application {
         Label lbSemanFinal = new Label("Semana Final");
         TextField tfSemanaFinal = new TextField();
         tfSemanaFinal.setPrefWidth(220);
+        
+        TableView tvTablaSemanas = new TableView();
 
         Button btnBuscar = new Button ("Buscar");
         btnBuscar.setOnAction((event) -> {
             lstWhere.clear();
+            lstWhere.add("Nombre = '"+cbCobradores.getValue()+"' ");
+            cobrador cbrDTO = cobraDAO.consultarCobradores(lstWhere).get(0);            
+            lstWhere.clear();
             lstWhere.add("pr.idTarjeta is not null");
             lstWhere.add("pr.Tipo in('Parcialidad', 'Abono')");
-            lstWhere.add("ta.idCobrador = 1");              
-            lstWhere.add("cast(semana as integer ) between 48 and 50");              
+            lstWhere.add("ta.idCobrador = "+String.valueOf(cbrDTO.getIdCobrador())); 
+            lstWhere.add("year = '"+tfYear.getText()+"' ");
+            lstWhere.add("cast(semana as integer ) between "+tfSemanaInicial.getText() +" and " + tfSemanaFinal.getText());              
             lstTarjetasAsigPorSemanaConPagos = FXCollections.observableList(tarAsigDAO.consultarTarjetasPagosPorSemana(lstWhere));
+             tvTablaSemanas.setItems(lstTarjetasAsigPorSemanaConPagos);
             if (!aList.isEmpty())aList.clear();
             if (!categorias.isEmpty())categorias.clear();
             for (tarjetasAsigPorSemanaConPagosDTO t : lstTarjetasAsigPorSemanaConPagos){
@@ -4967,11 +4974,16 @@ public class COPLADB extends Application {
   
         TableColumn CantidadColum = new TableColumn("Cantidad");
         CantidadColum.setPrefWidth(300);
-        CantidadColum.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        CantidadColum.setCellValueFactory(new PropertyValueFactory<>("cuantosPagos"));
         
-        TableView tvTablaSemanas = new TableView();
+        TableColumn MontoCobradoColum = new TableColumn("Monto Cobrado");
+        MontoCobradoColum.setPrefWidth(300);
+        MontoCobradoColum.setCellValueFactory(new PropertyValueFactory<>("sumaMontos"));
+        
+        
         tvTablaSemanas.setPrefSize(850, 200);
-        tvTablaSemanas.getColumns().addAll(SemanaColum, CantidadColum);
+        tvTablaSemanas.getColumns().addAll(SemanaColum, CantidadColum, MontoCobradoColum);
+       
         
         // Layouts
         GridPane gpSeleccionCobrador = new GridPane();

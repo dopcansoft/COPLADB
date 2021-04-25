@@ -2980,12 +2980,12 @@ public class COPLADB extends Application {
         item.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                ObservableList<tarjeta> posList = tvTarjetasSinAsignar.getItems();
+                ObservableList<tarjetaAsignadas> posList = tvTarjetasSinAsignar.getItems();
                 int old_r = -1;
                 StringBuilder clipboardString = new StringBuilder();
                 clipboardString.append("Id \t Folio \tidCliente \tPrecio \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tSaldo \tFecha \tPagos \n");
                 //clipboardString.append("Id \t Folio \tidCliente \tPrecio \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tSaldo \tFecha \tPagos \n");
-                for (tarjeta p : posList) {
+                for (tarjetaAsignadas p : posList) {
 
                     clipboardString.append(
                             p.getIdTarjeta() + " \t"
@@ -3019,9 +3019,7 @@ public class COPLADB extends Application {
         tvTarjetasSinAsignar.setItems(FXCollections.observableArrayList(tarAsigDAO.consultarTarjetasSinAsignar(lstWhere)));
         tfTarjetasSinAsignar.setText(String.valueOf(tvTarjetasSinAsignar.getItems().size()));
         
-        tvTarjetasSinAsignar.setOnMouseClicked((event) -> {
-
-        });
+        //tvTarjetasSinAsignar.setOnMouseClicked((event) -> {     });
 
 
         //Tabla Tarjetas Asignadas
@@ -3068,12 +3066,13 @@ public class COPLADB extends Application {
                 ObservableList<tarjetaAsignadas> posList = tvTarjetasAsignadas.getItems();
                 int old_r = -1;
                 StringBuilder clipboardString = new StringBuilder();
-                clipboardString.append("Folio \tPrecio \tSaldo \tCobrador \tFecha Asignacion \tEdo. Ent. \tEdo. Rec. \n");
+                clipboardString.append("idTarjeta \tFolio \tPrecio \tSaldo \tCobrador \tFecha Asignacion \tEdo. Ent. \tEdo. Rec. \n");
                 //clipboardString.append("Folio \tidCliente\tPrecio \tSaldo \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tFecha \tPagos \n");
                 for (tarjetaAsignadas p : posList) {
 
                        clipboardString.append(
-                                p.getFolio()+" \t"
+                                p.getIdTarjeta()+" \t"
+                               +p.getFolio()+" \t"
                                +p.getPrecio()+" \t"
                                +p.getSaldo()+" \t"
                                +p.getNombreCobrador()+" \t"

@@ -2984,29 +2984,30 @@ public class COPLADB extends Application {
                 int old_r = -1;
                 StringBuilder clipboardString = new StringBuilder();
                 clipboardString.append("Id \t Folio \tidCliente \tPrecio \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tSaldo \tFecha \tPagos \n");
+                //clipboardString.append("Id \t Folio \tidCliente \tPrecio \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tSaldo \tFecha \tPagos \n");
                 for (tarjeta p : posList) {
 
-                       clipboardString.append(
-                                p.getIdTarjeta()+" \t"
-                               +p.getFolio()+" \t"
-                               +p.getIdCliente()+" \t"
-                               +p.getPrecio()+" \t"
-                               +p.getEnganche()+" \t"
-                               +p.getIdVendedor()+" \t"
-                               +p.getClasificacion()+" \t"
-                               +p.getTipoPago()+" \t"
-                               +p.getRegion()+" \t"
-                               +p.getDiaCobro()+" \t"
-                               +p.getEnganchePend()+" \t"
-                               +p.getSaldo()+" \t"
-                               +p.getFecha()+" \t"
-                               +p.getPagos()+" \n");
-                }  
-            final ClipboardContent content = new ClipboardContent();
-            content.putString(clipboardString.toString());
-            Clipboard.getSystemClipboard().setContent(content);
+                    clipboardString.append(
+                            p.getIdTarjeta() + " \t"
+                            + p.getFolio() + " \t"
+                            + p.getIdCliente() + " \t"
+                            + p.getPrecio() + " \t"
+                            + p.getEnganche() + " \t"
+                            + p.getIdVendedor() + " \t"
+                            + p.getClasificacion() + " \t"
+                            + p.getTipoPago() + " \t"
+                            + p.getRegion() + " \t"
+                            + p.getDiaCobro() + " \t"
+                            + p.getEnganchePend() + " \t"
+                            + p.getSaldo() + " \t"
+                            + p.getFecha() + " \t"
+                            + p.getPagos() + " \n");
+                }
+                final ClipboardContent content = new ClipboardContent();
+                content.putString(clipboardString.toString());
+                Clipboard.getSystemClipboard().setContent(content);
             }
-            } );
+        });
             ContextMenu menu = new ContextMenu();
             menu.getItems().addAll(item);
             tvTarjetasSinAsignar.setContextMenu(menu);
@@ -3061,30 +3062,24 @@ public class COPLADB extends Application {
                 nombreCobradorColumna, FechaAsignadoColumna, estadoEntregadoColum, estadoRecibidoColum );
         
         MenuItem itemsTarjetasAsignadas = new MenuItem("Copiar Todo");  //Pendientes modificar codigo
-        item.setOnAction(new EventHandler<ActionEvent>() {
+        itemsTarjetasAsignadas.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                ObservableList<tarjeta> posList = tvTarjetasSinAsignar.getItems();
+                ObservableList<tarjetaAsignadas> posList = tvTarjetasAsignadas.getItems();
                 int old_r = -1;
                 StringBuilder clipboardString = new StringBuilder();
-                clipboardString.append("Id \t Folio \tidCliente \tPrecio \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tSaldo \tFecha \tPagos \n");
-                for (tarjeta p : posList) {
+                clipboardString.append("Folio \tPrecio \tSaldo \tCobrador \tFecha Asignacion \tEdo. Ent. \tEdo. Rec. \n");
+                //clipboardString.append("Folio \tidCliente\tPrecio \tSaldo \tEnganche \tId Vendedor \t Clasificacion \tTipo Pago \tRegion \tDia Cobro \tEnganche Pend. \tFecha \tPagos \n");
+                for (tarjetaAsignadas p : posList) {
 
                        clipboardString.append(
-                                p.getIdTarjeta()+" \t"
-                               +p.getFolio()+" \t"
-                               +p.getIdCliente()+" \t"
+                                p.getFolio()+" \t"
                                +p.getPrecio()+" \t"
-                               +p.getEnganche()+" \t"
-                               +p.getIdVendedor()+" \t"
-                               +p.getClasificacion()+" \t"
-                               +p.getTipoPago()+" \t"
-                               +p.getRegion()+" \t"
-                               +p.getDiaCobro()+" \t"
-                               +p.getEnganchePend()+" \t"
                                +p.getSaldo()+" \t"
-                               +p.getFecha()+" \t"
-                               +p.getPagos()+" \n");
+                               +p.getNombreCobrador()+" \t"
+                               +p.getFechaAsignado()+" \t"
+                               +p.getEstadoEntregado()+" \t"
+                               +p.getEstadoRecibido()+" \n");
                 }  
             final ClipboardContent content = new ClipboardContent();
             content.putString(clipboardString.toString());
@@ -3092,7 +3087,7 @@ public class COPLADB extends Application {
             }
             } );
             ContextMenu menuContextTarjetaAsignadas = new ContextMenu();
-            menuContextTarjetaAsignadas.getItems().addAll(item);
+            menuContextTarjetaAsignadas.getItems().addAll(itemsTarjetasAsignadas);
             tvTarjetasAsignadas.setContextMenu(menuContextTarjetaAsignadas);
             
         lstWhere.clear();

@@ -62,22 +62,30 @@ import copladb.DAO.tarjetaAsignadasDAO;
 import copladb.DTO.tarjetaAsignadas;
 import copladb.DAO.gastoDAO;
 import copladb.DTO.gasto;
+import copladb.DTO.usuario;
+import copladb.DAO.usuarioDAO;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.function.Predicate;
+import javafx.geometry.HPos;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.text.Font;
+import javafx.stage.Modality;
 /**
  *
  * @author i7
@@ -107,6 +115,8 @@ public class COPLADB extends Application {
     detalle_venta detVentaDTO = new detalle_venta();
     pagosProyectadosDAO pagProyDAO = new pagosProyectadosDAO();
     pagosRealizadosDAO pagReaDAO = new pagosRealizadosDAO();
+    usuarioDAO usuDAO = new usuarioDAO();
+    usuario usua = new usuario();
     
     List<tarjeta> lstTarjetas = new ArrayList<>();
     List<tarjetaAsignadas> lstTarjetasAsignadas = new ArrayList<>();
@@ -118,16 +128,18 @@ public class COPLADB extends Application {
     List<cliente> lstCliente = new ArrayList<>();
     List<vendedor> lstVendedor = new ArrayList<>();
     List<String> lstWhere = new ArrayList<>();
+    ObservableList<usuario> lstUsuarios = FXCollections.observableArrayList();
     
     float GranTotal = 0.0f;
     int ContNumPagosProyectados = 0;
     int ContNumPagosRealizado = 0;
+    Stage primaryStageLocal;
 
 
     
     @Override
     public void start(Stage primaryStage) {
-
+        primaryStageLocal = primaryStage;
         //Opciones del menu Tarjetas
         MenuItem miNuevaTarjeta = new MenuItem("Nueva Tarjeta");
         MenuItem miModificarTarjeta= new MenuItem("Modificar/Consultar Tarjeta");
@@ -358,8 +370,58 @@ public class COPLADB extends Application {
         });        
         
         //Opciones del menu Herramientas
-        MenuItem miGestionarUsuarios = new MenuItem("Gestionar Usuarios");
+        //MenuItem miGestionarUsuarios = new MenuItem("Gestionar Usuarios");
+        MenuItem miNuevoUsuario = new MenuItem("Nuevo Usuario");
+        MenuItem miModificarUsuario = new MenuItem("Modificar Usuario");
+        MenuItem miEliminarUsuario = new MenuItem("Eliminar Usuario");
+        MenuItem miAccesosUsuario = new MenuItem("Accesos a Usuario");
+
+        miNuevoUsuario.setOnAction((event) -> {
+              if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaNuevoUsuario());
+              }
+              else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaNuevoUsuario());
+              }
+        });
+        
+        miModificarUsuario.setOnAction((event) -> {
+              if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaModificarUsuario());
+              }
+              else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaModificarUsuario());
+              }
+        });
+        
+        miEliminarUsuario.setOnAction((event) -> {
+              if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaEliminarUsuario());
+              }
+              else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaEliminarUsuario());
+              }
+        });
+
+        miAccesosUsuario.setOnAction((event) -> {
+            if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaPermisosUsuario());
+            }
+            else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaPermisosUsuario());
+              }
+        });
+        
+        Menu submenuUsuarios = new Menu("Usuarios");
+        submenuUsuarios.getItems().addAll(miNuevoUsuario, miModificarUsuario, miEliminarUsuario, miAccesosUsuario);        
         MenuItem miGestionBonos = new MenuItem("Gestion Bonos");
+        
+
+        
         MenuItem miSalir = new MenuItem("Salir del Sistema");
         miSalir.setOnAction(((event) -> {
                 primaryStage.close();
@@ -382,8 +444,8 @@ public class COPLADB extends Application {
         Menu mGastos = new Menu("Gastos");
         mGastos.getItems().addAll(miAgregarGastos, miModificarGastos, miEliminarGastos, miAcumuladoCaja);
         Menu mHerramientas = new Menu("Herramientas");
-        mHerramientas.getItems().addAll(miGestionarUsuarios, miGestionBonos, miSalir);
-        
+        mHerramientas.getItems().addAll(submenuUsuarios, miGestionBonos, miSalir);
+      
         MenuBar mbMain = new MenuBar(mCobranza, mClientes, mVendedores, mCobradores, mInventario, mGastos, mHerramientas);
         
         Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
@@ -404,12 +466,104 @@ public class COPLADB extends Application {
         
         Scene scene = new Scene(root, anchoPantalla, altoPantalla);
         scene.getStylesheets().add(stylesheet);        
-        
+        //Image ico = new Image("../copladb/recursos/iconPeso.png");
+        Image ico = new Image(getClass().getResourceAsStream("recursos/IconSF.png"));
+        primaryStage.getIcons().add(ico); 
+        //primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("recursos/iconPeso.png")));
         primaryStage.setTitle("--Sistema Cobranza--");
         primaryStage.setScene(scene);
-        primaryStage.show();
+        //primaryStage.show();
+        loginEmpresa();
     }
-    
+    public void loginEmpresa(){
+        Stage loginStage = new Stage();
+        loginStage.getIcons().add(new Image(getClass().getResourceAsStream("recursos/IconSF.png")));
+        loginStage.setTitle("COPLADB. Login");
+        
+        VBox vbPpal = new VBox();
+        vbPpal.setSpacing(10);
+        vbPpal.setAlignment(Pos.CENTER);
+        
+        Label lbTituloVista = new Label("ACCESO");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+
+        Label lbUsuario = new Label("Usuario:");
+        Label lbContrasena = new Label("Contraseña:");        
+        TextField tfUsuario = new TextField();
+        tfUsuario.setText(""); //tfUsuario.setText("SuperUser");
+        tfUsuario.setPrefWidth(180);
+        tfUsuario.setAlignment(Pos.CENTER);
+        PasswordField tfContrasena = new PasswordField();
+        tfContrasena.setPrefWidth(180);
+        tfContrasena.setAlignment(Pos.CENTER);        
+        tfContrasena.setPromptText("********");
+        tfContrasena.setText("");//tfContrasena.setText("Admin");
+        
+        GridPane gpUsuario = new GridPane();
+        gpUsuario.setPadding(new Insets(5, 5, 5, 5));
+        gpUsuario.setVgap(10);
+        gpUsuario.setHgap(10);
+        gpUsuario.setAlignment(Pos.CENTER);
+        
+        gpUsuario.add(lbUsuario,0,1);
+        gpUsuario.add(tfUsuario,1,1);
+        gpUsuario.add(lbContrasena, 0, 2);
+        gpUsuario.add(tfContrasena, 1, 2);
+        
+        Button btnIngresar = new Button("Ingresar");
+        btnIngresar.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+            Alert aviso = new Alert(Alert.AlertType.WARNING);
+            if (tfUsuario.getText().isEmpty() || tfContrasena.getText().isEmpty()){
+                aviso.setContentText("Campo(s) vacío(s)");
+                Optional<ButtonType> action = aviso.showAndWait();
+                Boolean vUsuarioCorrecto = false;
+            }
+            else{
+                usuarioDAO usloginDAO = new usuarioDAO();
+                usuario uslogin = new usuario();
+                uslogin = usloginDAO.consultaUnUsuario(tfUsuario.getText());
+                usua = uslogin;
+                if (tfContrasena.getText().equals(uslogin.getClaveAcceso())){
+                        aviso.setAlertType(Alert.AlertType.INFORMATION);
+                        aviso.setContentText("Acceso Permitido");
+                        //Optional<ButtonType> action = aviso.showAndWait();
+                        loginStage.close();
+                        primaryStageLocal.show();
+                        //aviso.setContentText("Acceso no permitido");
+                        Optional<ButtonType> action = aviso.showAndWait();
+                }
+                else{
+                    aviso.setContentText("Usuario y/o Contraseña Incorrectos");
+                    Optional<ButtonType> action = aviso.showAndWait();
+                }
+            }
+            }
+        });
+        
+        Button btnSalir = new Button("   Salir   ");
+        btnSalir.setOnAction((ActionEvent e)->{
+            loginStage.close();
+        });
+        
+        HBox hbBotones = new HBox();
+        hbBotones.setSpacing(10);
+        hbBotones.getChildren().addAll(btnIngresar, btnSalir);
+        hbBotones.setAlignment(Pos.CENTER);
+        
+        vbPpal.getChildren().addAll(lbTituloVista, gpUsuario, hbBotones);
+        
+        StackPane rootSelectClientes = new StackPane();
+        rootSelectClientes.getChildren().addAll(vbPpal);
+        Scene scene = new Scene(rootSelectClientes,300,200);
+        loginStage.setScene(scene);
+        loginStage.setIconified(false);
+        loginStage.initModality(Modality.WINDOW_MODAL);
+        loginStage.show();
+        
+    }    
     //Modulos de Tarjeta
     private void removerVistas(){
        if (vbAreaTrabajo.getChildren().size()>0){
@@ -3154,9 +3308,9 @@ public class COPLADB extends Application {
         
         
         btnAsignar.setOnAction((event) -> {
-            
-            lstTarjetasAsignadas.addAll(tvTarjetasSinAsignar.getSelectionModel().getSelectedItems());
-            for (tarjetaAsignadas t : lstTarjetasAsignadas){
+            List<tarjetaAsignadas> lstTarjetasSelecTemp = new ArrayList<>();            
+            lstTarjetasSelecTemp.addAll(tvTarjetasSinAsignar.getSelectionModel().getSelectedItems());
+            for (tarjetaAsignadas t : lstTarjetasSelecTemp){
                 tarAsigDAO.insertarTarjetaAsignadas(t.getIdTarjeta(), cobraDTO.getIdCobrador(), dpFechaAsignacion.getValue().toString(), t.getClasificacion(), "SR");
             }
 
@@ -6112,8 +6266,1115 @@ public class COPLADB extends Application {
         vbDatosGasto.getChildren().addAll(gpSeleccionarGasto, vbTablaGasto, gpDatosGasto, gpBotonesControl);
         
         return vbDatosGasto;
-    }    
+    }  
     
+    //Modulos Herramientas y Usuarios
+    private VBox vistaNuevoUsuario(){
+        VBox vbPpal = new VBox();
+        vbPpal.setSpacing(10);
+        vbPpal.setAlignment(Pos.CENTER);
+        Label lbTituloVista = new Label("NUEVO USUARIO");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+
+        TableView tvUsuarios = new TableView();
+        tvUsuarios.setPrefSize(706, 350);        
+        TableColumn<usuario, String> colUsuario = new TableColumn("USUARIO");
+        colUsuario.setMinWidth(100);
+        colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
+        TableColumn<usuario, String> colNombre = new TableColumn("NOMBRE");
+        colNombre.setPrefWidth(200);
+        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        TableColumn<usuario, String> colDireccion = new TableColumn("DIRECCION");
+        colDireccion.setPrefWidth(200);
+        colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
+        TableColumn<usuario, String> colTelefono = new TableColumn("TELEFONO");
+        colTelefono.setPrefWidth(100);
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        TableColumn<usuario, String> colPuesto = new TableColumn("PUESTO");
+        colPuesto.setPrefWidth(100);
+        colPuesto.setCellValueFactory(new PropertyValueFactory<>("puesto"));        
+        tvUsuarios.getColumns().addAll(colUsuario, colNombre, colDireccion, colTelefono, colPuesto);
+
+        lstWhere.clear();
+        lstUsuarios.clear();
+        lstUsuarios.addAll(usuDAO.consultaUsuario(lstWhere));        
+        tvUsuarios.setItems(lstUsuarios);
+        
+	Label lbUsuario  = new Label("Usuario: ");
+        TextField tfUsuario = new TextField();
+        tfUsuario.setPrefWidth(200);
+	Label lbNombre  = new Label("Nombre Usuario: ");
+        TextField tfNombre = new TextField();
+        tfNombre.setPrefWidth(200);
+	Label lbTipoUsuario  = new Label("Tipo Usuario: ");
+        ObservableList<String> lstOpcionesTipoUsuario = FXCollections.observableArrayList("ADMINISTRADOR","SUPERVISOR");
+        ComboBox cbTipoUsuario = new ComboBox(lstOpcionesTipoUsuario);
+        cbTipoUsuario.setPrefWidth(200);
+	Label lbContrasena  = new Label("Contraseña: ");
+        PasswordField tfContrasena = new PasswordField();
+        tfContrasena.setPrefWidth(200);
+        tfContrasena.setPromptText("********");
+	Label lbConfirmarContrasena  = new Label("Confirmar Contraseña: ");
+        PasswordField tfCContrasena = new PasswordField();
+        tfCContrasena.setPrefWidth(200);
+        tfCContrasena.setPromptText("********");
+        Label lbDirec = new Label("Dirección:");
+        TextField tfDirec = new TextField();
+        tfDirec.setPrefWidth(200);
+        Label lbTel = new Label("Teléfono:");       
+        TextField tfTel = new TextField();
+        tfTel.setPrefWidth(200);
+        
+        Button btnSalir = new Button("  Salir  ");
+        btnSalir.setOnAction((ActionEvent e)->{
+            removerVistas();
+        });
+                
+        Button btnAgregar = new Button(" Agregar ");
+        btnAgregar.setOnAction((ActionEvent e)->{
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setHeaderText(null);
+            alert.setTitle("Aviso");
+            alert.setContentText("¿Desea crear el usuario indicado?");
+            Optional<ButtonType> action = alert.showAndWait(); 
+            if (action.get() == ButtonType.OK) {
+                Alert aviso = new Alert(Alert.AlertType.WARNING);
+                aviso.setHeaderText(null);
+                aviso.setTitle("Aviso");
+                if (tfUsuario.getText().isEmpty() || tfNombre.getText().isEmpty() || tfContrasena.getText().isEmpty() || tfCContrasena.getText().isEmpty()){
+                   aviso.setContentText("¡Faltan datos!");
+                   action = aviso.showAndWait();
+                } else {
+                    if (tfContrasena.getText().equals(tfCContrasena.getText())) {
+                        usuario usua = new usuario();
+                        
+                        usua.setNombre(tfNombre.getText());
+                        usua.setUsuario(tfUsuario.getText());
+                        usua.setClaveAcceso(tfContrasena.getText());
+                        usua.setPuesto(cbTipoUsuario.getValue().toString());
+                        usua.setDireccion(tfDirec.getText());
+                        usua.setTelefono(tfTel.getText());
+                        usua.setEstatus("ACTIVO");
+                        
+                        lstUsuarios.add(usua);
+                        usuDAO.insertarUsuario(usua);
+                        
+                        aviso.setContentText("Datos guardados");                                               
+                        action = aviso.showAndWait();                        
+                        tfUsuario.setText("");
+                        tfNombre.setText("");
+                        tfContrasena.setText("");
+                        tfCContrasena.setText("");
+                        tfDirec.setText("");
+                        tfTel.setText("");                        
+                    } else {
+                        aviso.setContentText("¡La contraseña no coincide!");
+                        action = aviso.showAndWait();
+                    }
+                }
+            } 
+        });
+
+        HBox hbTablaDatos = new HBox();
+        hbTablaDatos.setAlignment(Pos.CENTER);
+        hbTablaDatos.getChildren().addAll(tvUsuarios);
+        hbTablaDatos.setMaxWidth(750);
+        
+        HBox hbBotones = new HBox();
+        hbBotones.setAlignment(Pos.CENTER);
+        hbBotones.setSpacing(5);
+        hbBotones.getChildren().addAll(btnSalir, btnAgregar);
+        
+        GridPane gpUsuario = new GridPane();
+        gpUsuario.setAlignment(Pos.CENTER);
+        gpUsuario.setPadding(new Insets(5, 5, 5, 5));
+        gpUsuario.setVgap(10);
+        gpUsuario.setHgap(10);
+        
+        gpUsuario.add(lbUsuario,0,0);
+        gpUsuario.add(tfUsuario,1,0);
+        gpUsuario.add(lbNombre, 0, 1);
+        gpUsuario.add(tfNombre, 1, 1);
+        gpUsuario.add(lbTipoUsuario, 2, 1);
+        gpUsuario.add(cbTipoUsuario, 3, 1);
+        
+        gpUsuario.add(lbContrasena, 0, 2);
+        gpUsuario.add(tfContrasena, 1, 2);
+        gpUsuario.add(lbConfirmarContrasena, 2, 2);
+        gpUsuario.add(tfCContrasena, 3, 2);
+                
+        gpUsuario.add(lbDirec, 0, 3);
+        gpUsuario.add(tfDirec, 1, 3);
+        gpUsuario.add(lbTel, 2, 3);
+        gpUsuario.add(tfTel, 3, 3);
+                
+        vbPpal.getChildren().addAll(lbTituloVista, hbTablaDatos, gpUsuario, hbBotones);
+        
+        return vbPpal;
+    } 
+    private VBox vistaModificarUsuario(){
+        VBox vbPpal = new VBox();
+        vbPpal.setSpacing(10);
+        vbPpal.setAlignment(Pos.CENTER);
+        Label lbTituloVista = new Label("MODIFICAR USUARIO");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+
+        TableView tvUsuarios = new TableView();
+        tvUsuarios.setPrefSize(706, 350);        
+        TableColumn<usuario, String> colUsuario = new TableColumn("USUARIO");
+        colUsuario.setMinWidth(100);
+        colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
+        TableColumn<usuario, String> colNombre = new TableColumn("NOMBRE");
+        colNombre.setPrefWidth(200);
+        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        TableColumn<usuario, String> colDireccion = new TableColumn("DIRECCION");
+        colDireccion.setPrefWidth(200);
+        colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
+        TableColumn<usuario, String> colTelefono = new TableColumn("TELEFONO");
+        colTelefono.setPrefWidth(100);
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        TableColumn<usuario, String> colPuesto = new TableColumn("PUESTO");
+        colPuesto.setPrefWidth(100);
+        colPuesto.setCellValueFactory(new PropertyValueFactory<>("puesto"));
+        tvUsuarios.getColumns().addAll(colUsuario, colNombre, colDireccion, colTelefono, colPuesto);
+        
+        lstWhere.clear();
+        lstUsuarios.clear();
+        lstUsuarios.addAll(usuDAO.consultaUsuario(lstWhere));        
+        tvUsuarios.setItems(lstUsuarios);
+        
+	Label lbUsuario  = new Label("Usuario: ");
+        TextField tfUsuario = new TextField();
+        tfUsuario.setPrefWidth(200);
+	Label lbNombre  = new Label("Nombre Usuario: ");
+        TextField tfNombre = new TextField();
+        tfNombre.setPrefWidth(200);
+	Label lbTipoUsuario  = new Label("Tipo Usuario: ");
+        ObservableList<String> lstOpcionesTipoUsuario = FXCollections.observableArrayList("ADMINISTRADOR","GERENTE", "EJECUTIVO", "CAPTURISTA","DIFUSION");
+        ComboBox cbTipoUsuario = new ComboBox(lstOpcionesTipoUsuario);
+        cbTipoUsuario.setPrefWidth(200);
+	Label lbContrasena  = new Label("Contraseña: ");
+        PasswordField tfContrasena = new PasswordField();
+        tfContrasena.setPrefWidth(200);
+	Label lbContrasena2  = new Label("Confirmar Contraseña: ");
+        PasswordField tfContrasena2 = new PasswordField();
+        tfContrasena2.setPrefWidth(200);
+	Label lbDireccion  = new Label("Direccion: ");
+        TextField tfDireccion = new TextField();
+        tfDireccion.setPrefWidth(200);
+	Label lbTelefono  = new Label("Telefono: ");
+        TextField tfTelefono = new TextField();
+        tfTelefono.setPrefWidth(200);
+
+        tvUsuarios.setOnMouseClicked((event) -> {
+            usuario modUsuario = (usuario) tvUsuarios.getSelectionModel().getSelectedItem();
+            tfUsuario.setText(modUsuario.getUsuario());
+            tfNombre.setText(modUsuario.getNombre());
+            cbTipoUsuario.setValue(modUsuario.getPuesto());
+            tfContrasena.setText(modUsuario.getClaveAcceso());
+            tfContrasena2.setText(modUsuario.getClaveAcceso());
+            tfDireccion.setText(modUsuario.getDireccion());
+            tfTelefono.setText(modUsuario.getTelefono());
+        });
+
+        Button btnSalir = new Button("  Salir  ");
+        btnSalir.setOnAction((ActionEvent e)->{
+            removerVistas();
+        });
+        
+        Button btnActualizar = new Button("Actualizar");
+        btnActualizar.setOnAction((ActionEvent e)->{
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setHeaderText(null);
+            alert.setTitle("Confirmación");
+            alert.setContentText("¿Desea modificar el usuario seleccionado?");
+            Optional<ButtonType> action = alert.showAndWait(); 
+            if (action.get() == ButtonType.OK) {
+                Alert aviso = new Alert(Alert.AlertType.WARNING);
+                aviso.setHeaderText(null);
+                aviso.setTitle("Aviso");
+                if (tfUsuario.getText().isEmpty() || tfNombre.getText().isEmpty() || tfContrasena.getText().isEmpty() || tfContrasena2.getText().isEmpty()){
+                   aviso.setContentText("¡Faltan datos!");
+                   action = aviso.showAndWait();
+                } else {
+                    if (tfContrasena.getText().equals(tfContrasena2.getText())) {
+                        usuario usua = new usuario();
+                        usua = (usuario) tvUsuarios.getSelectionModel().getSelectedItem();
+                        
+                        usua.setNombre(tfNombre.getText());
+                        usua.setUsuario(tfUsuario.getText());
+                        usua.setClaveAcceso(tfContrasena.getText());
+                        usua.setPuesto(cbTipoUsuario.getValue().toString());
+                        usua.setDireccion(tfDireccion.getText());
+                        usua.setTelefono(tfTelefono.getText());
+                        usua.setEstatus("ACTIVO");
+                        
+                        tvUsuarios.refresh();                        
+                        usuDAO.modificarUsuario(usua);
+                        
+                        aviso.setContentText("Datos actualizados");                                               
+                        action = aviso.showAndWait();                        
+                        tfUsuario.setText("");
+                        tfNombre.setText("");
+                        tfContrasena.setText("");
+                        tfContrasena2.setText("");
+                        tfDireccion.setText("");
+                        tfTelefono.setText("");                        
+                    } else {
+                        aviso.setContentText("¡La contraseña no coincide!");
+                        action = aviso.showAndWait();
+                    }
+                }
+            } 
+        });        
+       
+        HBox hbTablaDatos = new HBox();
+        hbTablaDatos.setAlignment(Pos.CENTER);
+        hbTablaDatos.getChildren().addAll(tvUsuarios);
+        hbTablaDatos.setMaxWidth(750);
+        
+        HBox hbBotones = new HBox();
+        hbBotones.setAlignment(Pos.CENTER);
+        hbBotones.setSpacing(5);
+        hbBotones.getChildren().addAll(btnSalir, btnActualizar);
+        
+        GridPane gpUsuario = new GridPane();
+        gpUsuario.setAlignment(Pos.CENTER);
+        gpUsuario.setPadding(new Insets(5, 5, 5, 5));
+        gpUsuario.setVgap(10);
+        gpUsuario.setHgap(10);
+        
+        gpUsuario.add(lbUsuario,0,0);
+        gpUsuario.add(tfUsuario,1,0);
+        
+        gpUsuario.add(lbNombre, 0, 1);
+        gpUsuario.add(tfNombre, 1, 1);
+        gpUsuario.add(lbTipoUsuario, 2, 1);
+        gpUsuario.add(cbTipoUsuario, 3, 1);
+        
+        gpUsuario.add(lbContrasena,0,2);
+        gpUsuario.add(tfContrasena,1,2);
+        gpUsuario.add(lbContrasena2,2,2);
+        gpUsuario.add(tfContrasena2,3,2);
+               
+        gpUsuario.add(lbDireccion,0,3);
+        gpUsuario.add(tfDireccion,1,3);
+        gpUsuario.add(lbTelefono,2,3);
+        gpUsuario.add(tfTelefono,3,3);
+               
+        vbPpal.getChildren().addAll(lbTituloVista, hbTablaDatos, gpUsuario, hbBotones);
+        
+        return vbPpal;
+    }
+    private VBox vistaEliminarUsuario(){
+        VBox vbPpal = new VBox();
+        vbPpal.setSpacing(10);
+        vbPpal.setAlignment(Pos.CENTER);
+        Label lbTituloVista = new Label("NUEVO USUARIO");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+
+        TableView tvUsuarios = new TableView();
+        tvUsuarios.setPrefSize(706, 350);        
+        TableColumn<usuario, String> colUsuario = new TableColumn("USUARIO");
+        colUsuario.setMinWidth(100);
+        colUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario"));
+        TableColumn<usuario, String> colNombre = new TableColumn("NOMBRE");
+        colNombre.setPrefWidth(200);
+        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        TableColumn<usuario, String> colDireccion = new TableColumn("DIRECCION");
+        colDireccion.setPrefWidth(200);
+        colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
+        TableColumn<usuario, String> colTelefono = new TableColumn("TELEFONO");
+        colTelefono.setPrefWidth(100);
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        TableColumn<usuario, String> colPuesto = new TableColumn("PUESTO");
+        colPuesto.setPrefWidth(100);
+        colPuesto.setCellValueFactory(new PropertyValueFactory<>("puesto"));
+        tvUsuarios.getColumns().addAll(colUsuario, colNombre, colDireccion, colTelefono, colPuesto);
+        
+        lstWhere.clear();
+        lstUsuarios.clear();
+        lstUsuarios.addAll(usuDAO.consultaUsuario(lstWhere));        
+        tvUsuarios.setItems(lstUsuarios);
+        
+        Button btnSalir = new Button("  Salir  ");
+        btnSalir.setOnAction((ActionEvent e)->{
+            removerVistas();
+        });
+        
+        Button btnEliminar = new Button(" Eliminar ");
+        btnEliminar.setOnAction((ActionEvent e)->{
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setHeaderText(null);
+            alert.setTitle("Confirmación");
+            alert.setContentText("¿Desea eliminar el usuario seleccionado?");
+            Optional<ButtonType> action = alert.showAndWait();
+            if (action.get() == ButtonType.OK){
+                Alert aviso = new Alert(Alert.AlertType.WARNING);
+                aviso.setHeaderText(null);
+                aviso.setTitle("Aviso");
+                if (tvUsuarios.getSelectionModel().isEmpty()){
+                    aviso.setContentText("No se ha especificado el usuario a eliminar");
+                    action = aviso.showAndWait();
+                } else{
+                    usuario elimUsua = new usuario();
+                    elimUsua = (usuario) tvUsuarios.getSelectionModel().getSelectedItem();
+                    
+                    usuDAO.borrarUsuario(elimUsua.getUsuario());
+                    aviso.setContentText("Usuario Eliminado");
+                    action = aviso.showAndWait();
+                    
+                    lstUsuarios.remove(elimUsua);
+                }                
+            }
+        });        
+
+        HBox hbTablaDatos = new HBox();
+        hbTablaDatos.setAlignment(Pos.CENTER);
+        hbTablaDatos.getChildren().addAll(tvUsuarios);
+        hbTablaDatos.setMaxWidth(750);
+        
+        HBox hbBotones = new HBox();
+        hbBotones.setAlignment(Pos.CENTER);
+        hbBotones.setSpacing(5);
+        hbBotones.getChildren().addAll(btnSalir, btnEliminar);
+        
+        vbPpal.getChildren().addAll(lbTituloVista, hbTablaDatos, hbBotones);
+        
+        return vbPpal;
+    }    
+    private VBox vistaPermisosUsuario(){
+        VBox vbPpal= new VBox();        
+        Label lbTituloVista = new Label("PERMISOS USUARIO");
+        Font fuente = new Font("Arial Bold", 30);
+        lbTituloVista.setFont(fuente);        
+        vbPpal.setAlignment(Pos.CENTER);
+        Label lbEmpresa = new Label("Empresa ");
+        Label lbCreser = new Label("Cre-Ser Cultural");
+        Label lbMvc = new Label("MVCM ");
+        CheckBox chCreser = new CheckBox();
+        CheckBox chMvc = new CheckBox();
+        Label lbAcceso = new Label("Acceso a Modulos");
+        Label lbCapturacontrato = new Label("Capturar Contrato");
+        CheckBox chCapturacontrato = new CheckBox();
+        Label lbModificarcontrato = new Label("Consultar/Mod. Contrato");    
+        CheckBox chModificarcontrato = new CheckBox();
+        Label lbEstadoscontrato = new Label("Estados de Contrato");
+        CheckBox chEstadoscontrato = new CheckBox();  
+        Label lbSeriescontrato = new Label("Generar series Contrato");
+        CheckBox chSeriescontrato = new CheckBox();  
+        Label lbAsignarvendedor = new Label("Asignar Vendedor");
+        CheckBox chAsignarvendedor = new CheckBox();
+        Label lbImprimirtarjetas = new Label("Imprimir Tarjetas");
+        CheckBox chImprimirtarjetas = new CheckBox();
+        Label lbAjustecontratosactivos = new Label("Ajuste Contratos activos");
+        CheckBox chAjustecontratosactivos = new CheckBox();
+        Label lbAjustecontratosincidencia = new Label("Ajuste Contratos incidencia");
+        CheckBox chAjustecontratosincidencia = new CheckBox();
+        Label lbCatalogoproductos = new Label("Catalogo Productos");
+        CheckBox chCatalogoproductos = new CheckBox();
+        Label lbCargarcatalogo = new Label("Cargar Catalogo de Productos");
+        CheckBox chCargarcatalogo = new CheckBox();
+        Label lbAltaproductos = new Label("Alta de Productos");
+        CheckBox chAltaproductos = new CheckBox();  
+        Label lbBajaproductos = new Label("Baja de Productos");
+        CheckBox chBajaproductos = new CheckBox();
+        Label lbModificarproductos = new Label("Modificar Productos");
+        CheckBox chModificarproductos = new CheckBox();  
+        Label lbSeguimientoproductos = new Label("Seguimiento Productos Cancelados");
+        CheckBox chSeguimientoproductos = new CheckBox();  
+        Label lbSeguimientocontratos = new Label("Seguimiento Clientes");
+        CheckBox chSeguimientocontratos = new CheckBox();
+        Label lbSeguimientoejecutivos = new Label("Seguimiento Ejecutivos");
+        CheckBox chSeguimientoejecutivos = new CheckBox();
+        Label lbCobranzacontratos = new Label("Cobranza Contratos");
+        CheckBox chCobranzacontratos = new CheckBox();  
+        Label lbAsignarcontratos = new Label("Asignar Contratos");
+        CheckBox chAsignarcontratos = new CheckBox();  
+        Label lbCrearcamp = new Label("Crear Campaña");
+        CheckBox chCrearcamp = new CheckBox();
+        Label lbRealizarcamp = new Label("Realizar Campaña");
+        CheckBox chRealizarcamp = new CheckBox(); 
+        Label lbElimcamp = new Label("Eliminar Campaña");
+        CheckBox chElimcamp = new CheckBox();  
+        Label lbCargaroxxo = new Label("Cargar Oxxo");
+        CheckBox chCargaroxxo = new CheckBox();
+        Label lbCargarazteca = new Label("Cargar Azteca");
+        CheckBox chCargarazteca = new CheckBox();
+        Label lbCargarelektra = new Label("Cargar Elektra");
+        CheckBox chCargarelektra = new CheckBox();
+        Label lbDivideoxxo = new Label("Divide desde Oxxo");
+        CheckBox chDivideoxxo = new CheckBox();
+        Label lbDivideazteca = new Label("Divide desde Azteca");
+        CheckBox chDivideazteca = new CheckBox();
+        Label lbDivideelektra = new Label("Divide desde Elektra");
+        CheckBox chDivideelektra = new CheckBox();
+        Label lbOtrasformaspago = new Label("Otras Formas de pago");
+        CheckBox chOtrasformaspago = new CheckBox(); 
+        Label lbReportesingresos = new Label("Reportes Ingresos");
+        CheckBox chReportesingresos = new CheckBox();         
+        Label lbProyeccionestimados = new Label("Proyeccion Estimados");
+        CheckBox chProyeccionestimados = new CheckBox();  
+        Label lbCambcontusuario = new Label("Cambiar Contraseña Usuario");
+        CheckBox chCambcontusuario = new CheckBox();  
+        Label lbNuevousuario = new Label("Nuevo Usuario");
+        CheckBox chNuevousuario = new CheckBox();  
+        Label lbModifusuario = new Label("Modificar usuario");
+        CheckBox chModifusuario = new CheckBox();  
+        Label lbEliminarusuario = new Label("Eliminar Usuario");
+        CheckBox chEliminarusuario = new CheckBox();  
+        Label lbAccesousuarios = new Label("Accesos a Usuarios");
+        CheckBox chAccesousuarios = new CheckBox();  
+        Label lbNuevovendedor = new Label("Nuevo Vendedor");
+        CheckBox chNuevovendedor = new CheckBox();  
+        Label lbEliminarvendedor = new Label("Eliminar Vendedor");
+        CheckBox chEliminarvendedor = new CheckBox();            
+        Label lbNuevosupervisor = new Label("Nuevo Supervisor");
+        CheckBox chNuevosupervisor = new CheckBox();  
+        Label lbEliminarsupervisor = new Label("Eliminar Supervisor");
+        CheckBox chEliminarsupervisor = new CheckBox();        
+        Label lbNuevogerente = new Label("Nuevo Gerente");
+        CheckBox chNuevogerente = new CheckBox();  
+        Label lbEliminargerente = new Label("Eliminar Gerente");
+        CheckBox chEliminargerente = new CheckBox();         
+        Label lbCambiarempresa = new Label("Cambiar empresa");
+        CheckBox chCambiarempresa = new CheckBox();
+        
+        TextField tfNombre = new TextField();        
+        TableView tvUsuario = new TableView();   
+        
+        TableColumn<Object, Integer> codigoColumna = new TableColumn<>("id_usuario");
+        codigoColumna.setPrefWidth(60);
+        codigoColumna.setCellValueFactory(new PropertyValueFactory<>("id_usuario"));
+        TableColumn<Object, String> nomColumna = new TableColumn<>("Nombre");
+        nomColumna.setPrefWidth(350);
+        nomColumna.setCellValueFactory(new PropertyValueFactory<>("Nombre"));
+        TableColumn<Object, String> usuarioColumna = new TableColumn<>("Usuario");
+        usuarioColumna.setPrefWidth(150);
+        usuarioColumna.setCellValueFactory(new PropertyValueFactory<>("Usuario"));
+        TableColumn<Object, String> puestoColumna = new TableColumn<>("Puesto");
+        puestoColumna.setPrefWidth(150);
+        puestoColumna.setCellValueFactory(new PropertyValueFactory<>("Puesto"));        
+        tvUsuario.getColumns().setAll(codigoColumna, nomColumna, usuarioColumna,puestoColumna);        
+        List<String>  lstWhere= new ArrayList<>();             
+        List<usuario> lstUsua=new ArrayList<>();
+  /*
+        lstWhere.clear();
+        lstUsua.addAll(usuDAO.consultaUsuario(lstWhere));
+        tvUsuario.getItems().addAll(lstUsua);        
+        
+        Button btnCancelar = new Button("Cancelar");
+        btnCancelar.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                vbAreaTrabajo.getChildren().remove(0);
+            }
+        });     
+        
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setHeaderText(null);
+        Button btnGuardar = new Button("Guardar");
+        btnGuardar.setDisable(true);
+        tvUsuario.setOnMouseClicked((event) -> {
+                btnGuardar.setDisable(false);
+                usua = (usuario)tvUsuario.getSelectionModel().getSelectedItem();
+                int id=0;
+                String tipo_usuario;
+                id = usua.getId_usuario();
+                tipo_usuario= usua.getPuesto();
+                System.out.println("id Usuario "+usua.getId_usuario()+"Nombre Usuario "+usua.getNombre()+" Tipo Usuario: "+ tipo_usuario);
+                lstWhere.clear();
+                lstWhere.add("id_usuario = "+id);               
+                
+                boolean res;
+                res=empDAO.dbexisteRegistro(id);
+                if(res){
+                    miAccemp=empDAO.consultaAccesosemp(lstWhere).get(0);
+                    chMvc.setSelected(miAccemp.getAccesomvcm());
+                    chCreser.setSelected(miAccemp.getAccesoCreser());
+                 }else{   
+                    chMvc.setSelected(false);
+                    chCreser.setSelected(false);
+                 }
+                    lstWhere.clear();
+                    lstWhere.add("id_usuario = "+usua.getId_usuario());
+                    List<accesos> lstAccesos = acceDAO.consultaAccesos(lstWhere);
+                    if (lstAccesos.isEmpty()){
+                            chMvc.setSelected(false);
+                            chCreser.setSelected(false);
+                            chCapturacontrato.setSelected(false);
+                            chModificarcontrato.setSelected(false);
+                            chEstadoscontrato.setSelected(false);
+                            chSeriescontrato.setSelected(false);
+                            chAsignarvendedor.setSelected(false);
+                            chImprimirtarjetas.setSelected(false);
+                            chAjustecontratosactivos.setSelected(false);
+                            chAjustecontratosincidencia.setSelected(false);
+                            chCatalogoproductos.setSelected(false);
+                            chCargarcatalogo.setSelected(false);
+                            chAltaproductos.setSelected(false);
+                            chBajaproductos.setSelected(false);
+                            chModificarproductos.setSelected(false);
+                            chSeguimientoproductos.setSelected(false);
+                            chSeguimientocontratos.setSelected(false);
+                            chSeguimientoejecutivos.setSelected(false);
+                            chCobranzacontratos.setSelected(false);
+                            chAsignarcontratos.setSelected(false);
+                            chCrearcamp.setSelected(false);
+                            chRealizarcamp.setSelected(false);
+                            chElimcamp.setSelected(false);
+                            chCargaroxxo.setSelected(false);
+                            chCargarazteca.setSelected(false);
+                            chCargarelektra.setSelected(false);
+                            chDivideoxxo.setSelected(false);
+                            chDivideazteca.setSelected(false);
+                            chDivideelektra.setSelected(false);
+                            chOtrasformaspago.setSelected(false);
+                            chReportesingresos.setSelected(false);
+                            chProyeccionestimados.setSelected(false);
+                            chCambcontusuario.setSelected(false);
+                            chNuevousuario.setSelected(false);
+                            chModifusuario.setSelected(false);
+                            chEliminarusuario.setSelected(false);
+                            chAccesousuarios.setSelected(false);
+                            chNuevovendedor.setSelected(false);
+                            chEliminarvendedor.setSelected(false);
+                            chNuevosupervisor.setSelected(false);
+                            chEliminarsupervisor.setSelected(false);
+                            chNuevogerente.setSelected(false);
+                            chEliminargerente.setSelected(false);
+                            chCambiarempresa.setSelected(false);
+                    switch ( usua.getPuesto().toString()) {
+                        case "ADMINISTRADOR":                            
+                            chMvc.setSelected(true);
+                            chCreser.setSelected(true);
+                            chCapturacontrato.setSelected(true);
+                            chModificarcontrato.setSelected(true);
+                            chEstadoscontrato.setSelected(true);
+                            chSeriescontrato.setSelected(true);
+                            chAsignarvendedor.setSelected(true);
+                            chImprimirtarjetas.setSelected(true);
+                            chAjustecontratosactivos.setSelected(true);
+                            chAjustecontratosincidencia.setSelected(true);
+                            chCatalogoproductos.setSelected(true);
+                            chCargarcatalogo.setSelected(true);
+                            chAltaproductos.setSelected(true);
+                            chBajaproductos.setSelected(true);
+                            chModificarproductos.setSelected(true);
+                            chSeguimientoproductos.setSelected(true);
+                            chSeguimientocontratos.setSelected(true);
+                            chSeguimientoejecutivos.setSelected(true);
+                            chCobranzacontratos.setSelected(true);
+                            chAsignarcontratos.setSelected(true);
+                            chCrearcamp.setSelected(true);
+                            chRealizarcamp.setSelected(true);
+                            chElimcamp.setSelected(true);
+                            chCargaroxxo.setSelected(true);
+                            chCargarazteca.setSelected(true);
+                            chCargarelektra.setSelected(true);
+                            chDivideoxxo.setSelected(true);
+                            chDivideazteca.setSelected(true);
+                            chDivideelektra.setSelected(true);
+                            chOtrasformaspago.setSelected(true);
+                            chReportesingresos.setSelected(true);
+                            chProyeccionestimados.setSelected(true);
+                            chCambcontusuario.setSelected(true);
+                            chNuevousuario.setSelected(true);
+                            chModifusuario.setSelected(true);
+                            chEliminarusuario.setSelected(true);
+                            chAccesousuarios.setSelected(true);
+                            chNuevovendedor.setSelected(true);
+                            chEliminarvendedor.setSelected(true);
+                            chNuevosupervisor.setSelected(true);
+                            chEliminarsupervisor.setSelected(true);
+                            chNuevogerente.setSelected(true);
+                            chEliminargerente.setSelected(true);
+                            chCambiarempresa.setSelected(true);
+                            break;
+                        case "EJECUTIVO":
+                            chMvc.setSelected(true);
+                            chCreser.setSelected(true);
+                            chCapturacontrato.setSelected(false);
+                            chModificarcontrato.setSelected(false);
+                            chEstadoscontrato.setSelected(true);
+                            chSeriescontrato.setSelected(false);
+                            chAsignarvendedor.setSelected(false);
+                            chImprimirtarjetas.setSelected(false);
+                            chAjustecontratosactivos.setSelected(false);
+                            chAjustecontratosincidencia.setSelected(false);
+                            chCatalogoproductos.setSelected(false);
+                            chCargarcatalogo.setSelected(false);
+                            chAltaproductos.setSelected(false);
+                            chBajaproductos.setSelected(false);
+                            chModificarproductos.setSelected(false);
+                            chSeguimientoproductos.setSelected(false);
+                            chSeguimientocontratos.setSelected(true);
+                            chSeguimientoejecutivos.setSelected(false);
+                            chCobranzacontratos.setSelected(false);
+                            chAsignarcontratos.setSelected(false);
+                            chCrearcamp.setSelected(false);
+                            chRealizarcamp.setSelected(false);
+                            chElimcamp.setSelected(false);
+                            chCargaroxxo.setSelected(false);
+                            chCargarazteca.setSelected(false);
+                            chCargarelektra.setSelected(false);
+                            chDivideoxxo.setSelected(false);
+                            chDivideazteca.setSelected(false);
+                            chDivideelektra.setSelected(false);
+                            chOtrasformaspago.setSelected(false);
+                            chReportesingresos.setSelected(false);
+                            chProyeccionestimados.setSelected(false);
+                            chCambcontusuario.setSelected(true);
+                            chNuevousuario.setSelected(false);
+                            chModifusuario.setSelected(false);
+                            chEliminarusuario.setSelected(false);
+                            chAccesousuarios.setSelected(false);
+                            chNuevovendedor.setSelected(false);
+                            chEliminarvendedor.setSelected(false);
+                            chNuevosupervisor.setSelected(false);
+                            chEliminarsupervisor.setSelected(false);
+                            chNuevogerente.setSelected(false);
+                            chEliminargerente.setSelected(false);
+                            chCambiarempresa.setSelected(true);
+                            break;
+                        case "CAPTURISTA":
+                            chMvc.setSelected(true);
+                            chCreser.setSelected(true);
+                            chCapturacontrato.setSelected(true);
+                            chModificarcontrato.setSelected(false);
+                            chEstadoscontrato.setSelected(true);
+                            chSeriescontrato.setSelected(false);
+                            chAsignarvendedor.setSelected(false);
+                            chImprimirtarjetas.setSelected(true);
+                            chAjustecontratosactivos.setSelected(false);
+                            chAjustecontratosincidencia.setSelected(false);
+                            chCatalogoproductos.setSelected(false);
+                            chCargarcatalogo.setSelected(false);
+                            chAltaproductos.setSelected(false);
+                            chBajaproductos.setSelected(false);
+                            chModificarproductos.setSelected(false);
+                            chSeguimientoproductos.setSelected(false);
+                            chSeguimientocontratos.setSelected(true);
+                            chSeguimientoejecutivos.setSelected(false);
+                            chCobranzacontratos.setSelected(true);
+                            chAsignarcontratos.setSelected(false);
+                            chCrearcamp.setSelected(false);
+                            chRealizarcamp.setSelected(false);
+                            chElimcamp.setSelected(false);
+                            chCargaroxxo.setSelected(false);
+                            chCargarazteca.setSelected(false);
+                            chCargarelektra.setSelected(false);
+                            chDivideoxxo.setSelected(false);
+                            chDivideazteca.setSelected(false);
+                            chDivideelektra.setSelected(false);
+                            chOtrasformaspago.setSelected(false);
+                            chReportesingresos.setSelected(false);
+                            chProyeccionestimados.setSelected(false);
+                            chCambcontusuario.setSelected(true);
+                            chNuevousuario.setSelected(false);
+                            chModifusuario.setSelected(false);
+                            chEliminarusuario.setSelected(false);
+                            chAccesousuarios.setSelected(false);
+                            chNuevovendedor.setSelected(false);
+                            chEliminarvendedor.setSelected(false);
+                            chNuevosupervisor.setSelected(false);
+                            chEliminarsupervisor.setSelected(false);
+                            chNuevogerente.setSelected(false);
+                            chEliminargerente.setSelected(false);
+                            chCambiarempresa.setSelected(true);
+                            break;
+                        case "GERENTE":
+                            chMvc.setSelected(true);
+                            chCreser.setSelected(true);
+                            chCapturacontrato.setSelected(false);
+                            chModificarcontrato.setSelected(false);
+                            chEstadoscontrato.setSelected(true);
+                            chSeriescontrato.setSelected(false);
+                            chAsignarvendedor.setSelected(false);
+                            chImprimirtarjetas.setSelected(false);
+                            chAjustecontratosactivos.setSelected(false);
+                            chAjustecontratosincidencia.setSelected(false);
+                            chCatalogoproductos.setSelected(false);
+                            chCargarcatalogo.setSelected(false);
+                            chAltaproductos.setSelected(false);
+                            chBajaproductos.setSelected(false);
+                            chModificarproductos.setSelected(false);
+                            chSeguimientoproductos.setSelected(false);
+                            chSeguimientocontratos.setSelected(true);
+                            chSeguimientoejecutivos.setSelected(false);
+                            chCobranzacontratos.setSelected(true);
+                            chAsignarcontratos.setSelected(false);
+                            chCrearcamp.setSelected(false);
+                            chRealizarcamp.setSelected(false);
+                            chElimcamp.setSelected(false);
+                            chCargaroxxo.setSelected(false);
+                            chCargarazteca.setSelected(false);
+                            chCargarelektra.setSelected(false);
+                            chDivideoxxo.setSelected(false);
+                            chDivideazteca.setSelected(false);
+                            chDivideelektra.setSelected(false);
+                            chOtrasformaspago.setSelected(false);
+                            chReportesingresos.setSelected(true);
+                            chProyeccionestimados.setSelected(true);
+                            chCambcontusuario.setSelected(true);
+                            chNuevousuario.setSelected(false);
+                            chModifusuario.setSelected(false);
+                            chEliminarusuario.setSelected(false);
+                            chAccesousuarios.setSelected(false);
+                            chNuevovendedor.setSelected(false);
+                            chEliminarvendedor.setSelected(false);
+                            chNuevosupervisor.setSelected(false);
+                            chEliminarsupervisor.setSelected(false);
+                            chNuevogerente.setSelected(false);
+                            chEliminargerente.setSelected(false);
+                            chCambiarempresa.setSelected(true);
+                            break;
+                        case "DIFUSION":
+                            chMvc.setSelected(true);
+                            chCreser.setSelected(true);
+                            chCapturacontrato.setSelected(false);
+                            chModificarcontrato.setSelected(false);
+                            chEstadoscontrato.setSelected(false);
+                            chSeriescontrato.setSelected(false);
+                            chAsignarvendedor.setSelected(false);
+                            chImprimirtarjetas.setSelected(false);
+                            chAjustecontratosactivos.setSelected(false);
+                            chAjustecontratosincidencia.setSelected(false);
+                            chCatalogoproductos.setSelected(false);
+                            chCargarcatalogo.setSelected(false);
+                            chAltaproductos.setSelected(false);
+                            chBajaproductos.setSelected(false);
+                            chModificarproductos.setSelected(false);
+                            chSeguimientoproductos.setSelected(false);
+                            chSeguimientocontratos.setSelected(true);
+                            chSeguimientoejecutivos.setSelected(false);
+                            chCobranzacontratos.setSelected(false);
+                            chAsignarcontratos.setSelected(false);
+                            chCrearcamp.setSelected(true);
+                            chRealizarcamp.setSelected(true);
+                            chElimcamp.setSelected(true);
+                            chCargaroxxo.setSelected(false);
+                            chCargarazteca.setSelected(false);
+                            chCargarelektra.setSelected(false);
+                            chDivideoxxo.setSelected(false);
+                            chDivideazteca.setSelected(false);
+                            chDivideelektra.setSelected(false);
+                            chOtrasformaspago.setSelected(false);
+                            chReportesingresos.setSelected(false);
+                            chProyeccionestimados.setSelected(false);
+                            chCambcontusuario.setSelected(true);
+                            chNuevousuario.setSelected(false);
+                            chModifusuario.setSelected(false);
+                            chEliminarusuario.setSelected(false);
+                            chAccesousuarios.setSelected(false);
+                            chNuevovendedor.setSelected(false);
+                            chEliminarvendedor.setSelected(false);
+                            chNuevosupervisor.setSelected(false);
+                            chEliminarsupervisor.setSelected(false);
+                            chNuevogerente.setSelected(false);
+                            chEliminargerente.setSelected(false);
+                            chCambiarempresa.setSelected(true);
+                            break;
+                        case "INVENTARIO":
+                            chMvc.setSelected(true);
+                            chCreser.setSelected(true);
+                            chCapturacontrato.setSelected(false);
+                            chModificarcontrato.setSelected(false);
+                            chEstadoscontrato.setSelected(false);
+                            chSeriescontrato.setSelected(false);
+                            chAsignarvendedor.setSelected(false);
+                            chImprimirtarjetas.setSelected(false);
+                            chAjustecontratosactivos.setSelected(false);
+                            chAjustecontratosincidencia.setSelected(false);
+                            chCatalogoproductos.setSelected(true);
+                            chCargarcatalogo.setSelected(true);
+                            chAltaproductos.setSelected(true);
+                            chBajaproductos.setSelected(true);
+                            chModificarproductos.setSelected(true);
+                            chSeguimientoproductos.setSelected(true);
+                            chSeguimientocontratos.setSelected(true);
+                            chSeguimientoejecutivos.setSelected(false);
+                            chCobranzacontratos.setSelected(false);
+                            chAsignarcontratos.setSelected(false);
+                            chCrearcamp.setSelected(false);
+                            chRealizarcamp.setSelected(false);
+                            chElimcamp.setSelected(false);
+                            chCargaroxxo.setSelected(false);
+                            chCargarazteca.setSelected(false);
+                            chCargarelektra.setSelected(false);
+                            chDivideoxxo.setSelected(false);
+                            chDivideazteca.setSelected(false);
+                            chDivideelektra.setSelected(false);
+                            chOtrasformaspago.setSelected(false);
+                            chReportesingresos.setSelected(false);
+                            chProyeccionestimados.setSelected(false);
+                            chCambcontusuario.setSelected(true);
+                            chNuevousuario.setSelected(false);
+                            chModifusuario.setSelected(false);
+                            chEliminarusuario.setSelected(false);
+                            chAccesousuarios.setSelected(false);
+                            chNuevovendedor.setSelected(false);
+                            chEliminarvendedor.setSelected(false);
+                            chNuevosupervisor.setSelected(false);
+                            chEliminarsupervisor.setSelected(false);
+                            chNuevogerente.setSelected(false);
+                            chEliminargerente.setSelected(false);
+                            chCambiarempresa.setSelected(true);
+                            break;
+                        case "VENDEDOR":
+                            System.out.println( "" );
+                            break;
+                        default:
+                            System.out.println("error" );
+                            break;
+                        }
+                    }else {
+                            miAcce=acceDAO.consultaAccesos(lstWhere).get(0);
+                            chCapturacontrato.setSelected(miAcce.getCaptura_contrato());
+                            chModificarcontrato.setSelected(miAcce.getModificar_contrato());
+                            chEstadoscontrato.setSelected(miAcce.getEstados_contrato());
+                            chSeriescontrato.setSelected(miAcce.getSeries_contrato());
+                            chAsignarvendedor.setSelected(miAcce.getAsignar_vendedor());
+                            chImprimirtarjetas.setSelected(miAcce.getImprime_tarjetas());
+                            chAjustecontratosactivos.setSelected(miAcce.getAjuste_contratos_activos());
+                            chAjustecontratosincidencia.setSelected(miAcce.getAjuste_contratos_incidencia());
+                            chCatalogoproductos.setSelected(miAcce.getCatalogo_productos());
+                            chCargarcatalogo.setSelected(miAcce.getCargar_catalogo());
+                            chAltaproductos.setSelected(miAcce.getAlta_productos());
+                            chBajaproductos.setSelected(miAcce.getBaja_productos());
+                            chModificarproductos.setSelected(miAcce.getModificar_productos());
+                            chSeguimientoproductos.setSelected(miAcce.getSeguimiento_productos());
+                            chSeguimientocontratos.setSelected(miAcce.getSeguimiento_contratos());
+                            chSeguimientoejecutivos.setSelected(miAcce.getSeguimiento_ejecutivos());
+                            chCobranzacontratos.setSelected(miAcce.getCobranza_contratos());
+                            chAsignarcontratos.setSelected(miAcce.getAsignar_contratos());
+                            chCrearcamp.setSelected(miAcce.getCrear_camp());
+                            chRealizarcamp.setSelected(miAcce.getRealizar_camp());
+                            chElimcamp.setSelected(miAcce.getElim_camp());
+                            chCargaroxxo.setSelected(miAcce.getCargar_oxxo());
+                            chCargarazteca.setSelected(miAcce.getCargar_azteca());
+                            chCargarelektra.setSelected(miAcce.getCargar_elektra());
+                            chDivideoxxo.setSelected(miAcce.getDivide_oxxo());
+                            chDivideazteca.setSelected(miAcce.getDivide_azteca());
+                            chDivideelektra.setSelected(miAcce.getDivide_elektra());
+                            chOtrasformaspago.setSelected(miAcce.getOtras_formas());
+                            chReportesingresos.setSelected(miAcce.getReportes_ingresos());
+                            chProyeccionestimados.setSelected(miAcce.getProyeccion_estimados());
+                            chCambcontusuario.setSelected(miAcce.getCamb_cont_usuario());
+                            chNuevousuario.setSelected(miAcce.getNuevo_usuario());
+                            chModifusuario.setSelected(miAcce.getModif_usuario());
+                            chEliminarusuario.setSelected(miAcce.getEliminar_usuario());
+                            chAccesousuarios.setSelected(miAcce.getAcceso_usuarios());
+                            chNuevovendedor.setSelected(miAcce.getNuevo_vendedor());
+                            chEliminarvendedor.setSelected(miAcce.getEliminar_vendedor());
+                            chNuevosupervisor.setSelected(miAcce.getNuevo_supervisor());
+                            chEliminarsupervisor.setSelected(miAcce.getEliminar_supervisor());
+                            chNuevogerente.setSelected(miAcce.getNuevo_gerente());
+                            chEliminargerente.setSelected(miAcce.getEliminar_gerente());
+                            chCambiarempresa.setSelected(miAcce.getCambiar_empresa()); 
+                    }
+                
+        });               
+       
+        btnGuardar.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+               int id=0;
+               int res=0;
+               id = usua.getId_usuario();
+               lstWhere.clear();
+               lstWhere.add(0,"id_usuario="+id);
+               boolean res2;
+               res2=empDAO.dbexisteRegistro(id);
+               accesos_empresa emp=new accesos_empresa();
+               if(res2){
+                    emp.setAccesoCreser(chCreser.isSelected());
+                    emp.setAccesomvcm(chMvc.isSelected());
+                    emp.setIdUsuario(id);
+                    res=empDAO.modificarAccesosemp(emp);
+                }else {
+                    emp.setAccesoCreser(chCreser.isSelected());
+                    emp.setAccesomvcm(chMvc.isSelected());
+                    emp.setIdUsuario(id);
+                    btnGuardar.setDisable(true);                  
+                    res=empDAO.insertarAccesosemp(emp);               
+                }
+                    accesos acce=new accesos();
+                    acce.setId_usuario(id);
+                    acce.setCaptura_contrato(chCapturacontrato.isSelected());
+                    acce.setModificar_contrato(chModificarcontrato.isSelected());
+                    acce.setEstados_contrato(chEstadoscontrato.isSelected());
+                    acce.setSeries_contrato(chSeriescontrato.isSelected());
+                    acce.setAsignar_vendedor(chAsignarvendedor.isSelected());
+                    acce.setImprime_tarjetas(chImprimirtarjetas.isSelected());
+                    acce.setAjuste_contratos_activos(chAjustecontratosactivos.isSelected());
+                    acce.setAjuste_contratos_incidencia(chAjustecontratosincidencia.isSelected());
+                    acce.setCatalogo_productos(chCatalogoproductos.isSelected());
+                    acce.setCargar_catalogo(chCargarcatalogo.isSelected());
+                    acce.setAlta_productos(chAltaproductos.isSelected());
+                    acce.setBaja_productos(chBajaproductos.isSelected());
+                    acce.setModificar_productos(chModificarproductos.isSelected());
+                    acce.setSeguimiento_contratos(chSeguimientocontratos.isSelected());
+                    acce.setSeguimiento_productos(chSeguimientoproductos.isSelected());
+                    acce.setSeguimiento_ejecutivos(chSeguimientoejecutivos.isSelected());
+                    acce.setCobranza_contratos(chCobranzacontratos.isSelected());
+                    acce.setAsignar_contratos(chAsignarcontratos.isSelected());
+                    acce.setCrear_camp(chCrearcamp.isSelected());
+                    acce.setRealizar_camp(chRealizarcamp.isSelected());
+                    acce.setElim_camp(chElimcamp.isSelected());
+                    acce.setCargar_oxxo(chCargaroxxo.isSelected());
+                    acce.setCargar_azteca(chCargarazteca.isSelected());
+                    acce.setCargar_elektra(chCargarelektra.isSelected());
+                    acce.setDivide_oxxo(chDivideoxxo.isSelected());
+                    acce.setDivide_azteca(chDivideazteca.isSelected());
+                    acce.setDivide_elektra(chDivideelektra.isSelected());
+                    acce.setOtras_formas(chOtrasformaspago.isSelected());
+                    acce.setReportes_ingresos(chReportesingresos.isSelected());
+                    acce.setProyeccion_estimados(chProyeccionestimados.isSelected());
+                    acce.setCamb_cont_usuario(chCambcontusuario.isSelected());
+                    acce.setNuevo_usuario(chNuevousuario.isSelected());
+                    acce.setModif_usuario(chModifusuario.isSelected());
+                    acce.setEliminar_usuario(chEliminarusuario.isSelected());                    
+                    acce.setAcceso_usuarios(chAccesousuarios.isSelected());           
+                    acce.setNuevo_vendedor(chNuevovendedor.isSelected());
+                    acce.setEliminar_vendedor(chEliminarvendedor.isSelected());
+                    acce.setNuevo_supervisor(chNuevosupervisor.isSelected());
+                    acce.setEliminar_supervisor(chEliminarsupervisor.isSelected());
+                    acce.setNuevo_gerente(chNuevogerente.isSelected());
+                    acce.setEliminar_gerente(chEliminargerente.isSelected());
+                    acce.setCambiar_empresa(chCambiarempresa.isSelected());
+                lstWhere.clear();
+                lstWhere.add("id_usuario = "+usua.getId_usuario());
+                List<accesos> lstAccesos = acceDAO.consultaAccesos(lstWhere);
+                if (lstAccesos.isEmpty()){
+                  System.out.println("Inserto un registro");
+                  res=acceDAO.insertarAccesos(acce);
+                }else{
+                  res=acceDAO.modificarAccesos(acce);  
+                }    
+                alert.setTitle("Informativo");
+                alert.setAlertType(Alert.AlertType.INFORMATION);
+                alert.setContentText("Datos Actualizados "+res);
+                alert.showAndWait();                   
+            }
+        });
+        
+        GridPane gpPpal = new GridPane();
+        gpPpal.setPadding(new Insets(5,5,5,5));
+        gpPpal.setVgap(5);
+        gpPpal.setHgap(5);
+        gpPpal.add(lbEmpresa , 1, 3);        
+        gpPpal.add(lbMvc, 2,2 );
+        gpPpal.add(lbCreser, 3, 2);
+        gpPpal.setHalignment(chMvc, HPos.CENTER);
+        gpPpal.add(chMvc, 2,3 );
+        gpPpal.setHalignment(chCreser, HPos.CENTER);
+        gpPpal.add(chCreser, 3, 3);
+        
+        gpPpal.setColumnSpan(lbAcceso, 4);
+        gpPpal.setHalignment(lbAcceso, HPos.CENTER);
+        gpPpal.add(lbAcceso, 1,5 );       
+        gpPpal.add(lbCapturacontrato , 1, 6);
+        gpPpal.add(chCapturacontrato , 2, 6);
+        gpPpal.add(lbModificarcontrato , 1, 7);
+        gpPpal.add(chModificarcontrato , 2, 7);        
+        gpPpal.add(lbEstadoscontrato , 1, 8);
+        gpPpal.add(chEstadoscontrato , 2, 8);
+        gpPpal.add(lbSeriescontrato , 1, 9);
+        gpPpal.add(chSeriescontrato , 2, 9);
+        gpPpal.add(lbAsignarvendedor  , 1, 10);
+        gpPpal.add(chAsignarvendedor  , 2, 10);
+        gpPpal.add(lbImprimirtarjetas  , 1, 11);
+        gpPpal.add(chImprimirtarjetas  , 2, 11);
+        gpPpal.add(lbAjustecontratosactivos  , 1, 12);
+        gpPpal.add(chAjustecontratosactivos  , 2, 12);
+        gpPpal.add(lbAjustecontratosincidencia  , 1, 13);
+        gpPpal.add(chAjustecontratosincidencia  , 2, 13);
+        gpPpal.add(lbCatalogoproductos, 1, 14);
+        gpPpal.add(chCatalogoproductos, 2, 14);
+        gpPpal.add(lbAltaproductos, 1, 15);
+        gpPpal.add(chAltaproductos, 2, 15);
+        gpPpal.add(lbBajaproductos, 1, 16);
+        gpPpal.add(chBajaproductos, 2, 16);
+        gpPpal.add(lbModificarproductos, 1, 17);
+        gpPpal.add(chModificarproductos, 2, 17);
+        gpPpal.add(lbSeguimientoproductos, 1, 18);
+        gpPpal.add(chSeguimientoproductos, 2, 18);
+        gpPpal.add(lbSeguimientocontratos, 1, 19);
+        gpPpal.add(chSeguimientocontratos, 2, 19);
+        gpPpal.add(lbSeguimientoejecutivos, 1, 20);
+        gpPpal.add(chSeguimientoejecutivos, 2, 20);
+        gpPpal.add(lbCobranzacontratos, 1, 21);
+        gpPpal.add(chCobranzacontratos, 2, 21);
+        gpPpal.add(lbAsignarcontratos, 1, 22);
+        gpPpal.add(chAsignarcontratos, 2, 22);        
+        gpPpal.add(lbCrearcamp , 1, 23);
+        gpPpal.add(chCrearcamp , 2, 23);
+        gpPpal.add(lbRealizarcamp , 1, 24);
+        gpPpal.add(chRealizarcamp , 2, 24);
+        gpPpal.add(lbElimcamp , 1, 25);
+        gpPpal.add(chElimcamp , 2, 25);        
+        gpPpal.add(lbCargaroxxo , 1, 26);
+        gpPpal.add(chCargaroxxo , 2, 26);
+        gpPpal.add(lbCargarelektra , 3, 6);
+        gpPpal.add(chCargarelektra , 4, 6);
+        gpPpal.add(lbCargarazteca , 3, 7);
+        gpPpal.add(chCargarazteca , 4, 7);
+        gpPpal.add(lbDivideoxxo , 3, 8);
+        gpPpal.add(chDivideoxxo , 4, 8);
+        gpPpal.add(lbDivideelektra , 3, 9);
+        gpPpal.add(chDivideelektra , 4, 9);
+        gpPpal.add(lbDivideazteca , 3, 10);
+        gpPpal.add(chDivideazteca , 4, 10);
+        gpPpal.add(lbOtrasformaspago , 3, 11);
+        gpPpal.add(chOtrasformaspago , 4, 11);
+        gpPpal.add(lbReportesingresos , 3, 12);
+        gpPpal.add(chReportesingresos , 4, 12);
+        gpPpal.add(lbProyeccionestimados , 3, 13);
+        gpPpal.add(chProyeccionestimados , 4, 13);
+        gpPpal.add(lbCambcontusuario , 3, 14);
+        gpPpal.add(chCambcontusuario , 4, 14);
+        gpPpal.add(lbNuevousuario , 3, 15);
+        gpPpal.add(chNuevousuario , 4, 15);
+        gpPpal.add(lbModifusuario , 3, 16);
+        gpPpal.add(chModifusuario , 4, 16);
+        gpPpal.add(lbEliminarusuario , 3, 17);
+        gpPpal.add(chEliminarusuario , 4, 17);
+        gpPpal.add(lbAccesousuarios , 3, 18);
+        gpPpal.add(chAccesousuarios , 4, 18);
+        gpPpal.add(lbNuevovendedor , 3, 19);
+        gpPpal.add(chNuevovendedor , 4, 19);
+        gpPpal.add(lbEliminarvendedor , 3, 20);
+        gpPpal.add(chEliminarvendedor , 4, 20);        
+        gpPpal.add(lbNuevosupervisor , 3, 21);
+        gpPpal.add(chNuevosupervisor , 4, 21);
+        gpPpal.add(lbEliminarsupervisor , 3, 22);
+        gpPpal.add(chEliminarsupervisor , 4, 22);        
+        gpPpal.add(lbNuevogerente , 3, 23);
+        gpPpal.add(chNuevogerente , 4, 23);
+        gpPpal.add(lbEliminargerente , 3, 24);
+        gpPpal.add(chEliminargerente , 4, 24);        
+        gpPpal.add(lbCambiarempresa , 3, 25);
+        gpPpal.add(chCambiarempresa , 4, 25);
+        
+        gpPpal.setHalignment(btnCancelar, HPos.CENTER);
+        gpPpal.setHalignment(btnGuardar, HPos.LEFT);
+        gpPpal.add(btnCancelar,3,26);
+        gpPpal.add(btnGuardar,4,26); 
+        gpPpal.setAlignment(Pos.CENTER);
+       
+        HBox hbBuscar = new HBox();
+        
+        hbBuscar.setAlignment(Pos.CENTER);
+        hbBuscar.setSpacing(10);
+        hbBuscar.getChildren().addAll(tvUsuario, gpPpal);
+        vbPpal.getChildren().addAll(lbTituloVista, hbBuscar);
+       */
+        return vbPpal;  
+    }     
     
     /**
      * @param args the command line arguments

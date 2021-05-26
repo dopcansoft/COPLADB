@@ -1,0 +1,21 @@
+select * from Pagos_realizados where idTarjeta=1;
+
+select * from Tarjeta where Folio=7895;
+
+select * from Cobradores;
+
+select * from TarjetasAsignadas;
+
+select ta.idCobrador, ta.fecha as fec, ta.EstadoRecibido, ta.EstadoEntregado, ta.idTarjeta as numTarjeta, pr.idTarjeta, pr.Fecha as fechaPago, strfTime('%W',pr.Fecha) as semana, pr.Monto, pr.Tipo 
+from tarjetasAsignadas ta left join Pagos_realizados pr on ta.idTarjeta = pr.idTarjeta where pr.idTarjeta is not null and pr.Tipo in('Parcialidad', 'Abono');
+
+select ta.idCobrador, ta.EstadoRecibido, ta.EstadoEntregado, ta.idTarjeta as numTarjeta, pr.idTarjeta, strfTime('%Y',pr.Fecha) as year,  
+strfTime('%W',pr.Fecha) as semana, sum(pr.Monto) as sumaMontos, count(pr.Monto) as cuantosPagos, pr.Tipo 
+from tarjetasAsignadas ta left join Pagos_realizados pr on ta.idTarjeta = pr.idTarjeta where pr.idTarjeta is not null and pr.Tipo in('Parcialidad', 'Abono') 
+and ta.idCobrador = 1 and cast(semana as integer ) between 48 and 50 
+group by semana
+
+select ta.idCobrador, ta.EstadoRecibido, ta.EstadoEntregado, ta.idTarjeta as numTarjeta, pr.idTarjeta, strfTime('%Y',pr.Fecha) as year,  strfTime('%W',pr.Fecha) as semana, 
+sum(pr.Monto) as sumaMontos, count(pr.Monto) as cuantosPagos, pr.Tipo  from tarjetasAsignadas ta left join Pagos_realizados pr on ta.idTarjeta = pr.idTarjeta 
+where pr.idTarjeta is not null AND pr.Tipo in('Parcialidad', 'Abono') AND ta.idCobrador = 2 AND cast(semana as integer ) between 48 and 50
+group by semana

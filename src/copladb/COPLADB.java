@@ -67,6 +67,8 @@ import copladb.DAO.usuarioDAO;
 import copladb.DTO.accesos;
 import copladb.DAO.accesosDAO;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.function.Predicate;
@@ -121,6 +123,7 @@ public class COPLADB extends Application {
     usuario usua = new usuario();
     accesosDAO acceDAO = new accesosDAO();
     accesos miAcce = new accesos();
+    accesos actAcce = new accesos();
     
     List<tarjeta> lstTarjetas = new ArrayList<>();
     List<tarjetaAsignadas> lstTarjetasAsignadas = new ArrayList<>();
@@ -139,16 +142,62 @@ public class COPLADB extends Application {
     int ContNumPagosRealizado = 0;
     Stage primaryStageLocal;
 
-
+    Boolean nueva_tarjetas, modificar_consultar_Tarjeta, eliminar_tarjeta,
+    asignar_tarjeta, estado_cobranza, agregar_cliente, modificar_consultar_cliente,
+    eliminar_cliente,lista_negra_cliente, agregar_vendedor, modificar_consultar_vendedor, 
+    eliminar_vendedor, agregar_cobrador, modificar_consultar_cobrador, eliminar_cobrador,
+    estado_corte_cobrador, agregar_producto, modificar_consultar_producto, eliminar_producto,
+    estadisticas_producto, agregar_gasto, modificar_consultar_gasto, eliminar_gasto, acumulado_caja,
+    nuevo_usuario, modificar_usuario, eliminar_usuario, acceso_usuarios, gestion_bonos;
     
+    float totalCobrado =0;
+    float comision = 0;
+    float PorComision = (float) 0.12;
+    
+    //Opciones del menu Tarjetas
+    MenuItem miNuevaTarjeta = new MenuItem("Nueva Tarjeta");
+    MenuItem miModificarTarjeta= new MenuItem("Modificar/Consultar Tarjeta");
+    MenuItem miEliminarTarjeta= new MenuItem("Eliminar Tarjeta");
+    MenuItem miAsignarTarjetas =new MenuItem("Asignar Tarjetas"); //asigna tarjetas a cobradores
+    //Opciones del menu cobranza
+    MenuItem miEstadoTarjetas = new MenuItem("Estado Cobranza");
+    //Opciones del menu Clientes
+    MenuItem miRegistrarClientes = new MenuItem("Agregar Cliente");
+    MenuItem miModificarClientes = new MenuItem("Modificar/Consultar Cliente");
+    MenuItem miEliminarClientes = new MenuItem("Eliminar Cliente");
+    MenuItem miListaNegraClientes = new MenuItem("Lista Negra de Clientes");
+    //Opciones del menu Vendedor
+    MenuItem miAgregarVendedor = new MenuItem("Agregar Vendedor");
+    MenuItem miModificarVendedor = new MenuItem("Modificar/Consultar Vendedor");
+    MenuItem miEliminarVendedor = new MenuItem("Eliminar Vendedor");
+    //Opciones del menu Cobrador
+    MenuItem miAgregarCobrador = new MenuItem("Agregar Cobrador");
+    MenuItem miModificarCobrador = new MenuItem("Modificar/Consultar Cobrador");
+    MenuItem miEliminarCobrador = new MenuItem("Eliminar Cobrador");
+    MenuItem miEstadoCobrador = new MenuItem("Estado/Corte Cobrador");
+    //Opciones del menu Inventario
+    MenuItem miAgregarProducto = new MenuItem("Agregar Producto");
+    MenuItem miModificarProducto = new MenuItem("Modificar/Consultar Producto");
+    MenuItem miEliminarProducto = new MenuItem("Eliminar Producto");
+    MenuItem miEstadisticasProductos = new MenuItem("Estadisticas de Productos");
+    //Opciones del menu Gastos
+    MenuItem miAgregarGastos = new MenuItem("Agregar Gasto");
+    MenuItem miModificarGastos = new MenuItem("Modificar/Consultar Gasto");
+    MenuItem miEliminarGastos = new MenuItem("Eliminar Gasto");
+    MenuItem miAcumuladoCaja = new MenuItem("Acumulado en caja");
+    //Opciones del menu Herramientas
+    //MenuItem miGestionarUsuarios = new MenuItem("Gestionar Usuarios");
+    MenuItem miNuevoUsuario = new MenuItem("Nuevo Usuario");
+    MenuItem miModificarUsuario = new MenuItem("Modificar Usuario");
+    MenuItem miEliminarUsuario = new MenuItem("Eliminar Usuario");
+    MenuItem miAccesosUsuario = new MenuItem("Accesos a Usuario");
+    MenuItem miGestionBonos = new MenuItem("Gestion Bonos");
+    MenuItem miSalir = new MenuItem("Salir del Sistema");
     @Override
     public void start(Stage primaryStage) {
         primaryStageLocal = primaryStage;
+        
         //Opciones del menu Tarjetas
-        MenuItem miNuevaTarjeta = new MenuItem("Nueva Tarjeta");
-        MenuItem miModificarTarjeta= new MenuItem("Modificar/Consultar Tarjeta");
-        MenuItem miEliminarTarjeta= new MenuItem("Eliminar Tarjeta");
-        MenuItem miAsignarTarjetas =new MenuItem("Asignar Tarjetas"); //asigna tarjetas a cobradores
         
         miModificarTarjeta.setOnAction((event) -> {
            
@@ -187,15 +236,7 @@ public class COPLADB extends Application {
             }
         });
 
-        //Opciones del menu cobranza
-        MenuItem miEstadoTarjetas = new MenuItem("Estado Cobranza");
-        
         //Opciones del menu Clientes
-        MenuItem miRegistrarClientes = new MenuItem("Agregar Cliente");
-        MenuItem miModificarClientes = new MenuItem("Modificar/Consultar Cliente");
-        MenuItem miEliminarClientes = new MenuItem("Eliminar Cliente");
-        MenuItem miListaNegraClientes = new MenuItem("Lista Negra de Clientes");
-        
         miRegistrarClientes.setOnAction((event) -> {
             if(vbAreaTrabajo.getChildren().isEmpty()){
                 vbAreaTrabajo.getChildren().add(vRegistrarCliente());
@@ -232,11 +273,8 @@ public class COPLADB extends Application {
             }
         });
         
-        //Opciones del menu Vendedor
-        MenuItem miAgregarVendedor = new MenuItem("Agregar Vendedor");
-        MenuItem miModificarVendedor = new MenuItem("Modificar/Consultar Vendedor");
-        MenuItem miEliminarVendedor = new MenuItem("Eliminar Vendedor");
         
+        //Opciones del menu Vendedor
         miAgregarVendedor.setOnAction((event) -> {
             if(vbAreaTrabajo.getChildren().isEmpty()){
                 vbAreaTrabajo.getChildren().add(vRegistrarVendedor());
@@ -265,11 +303,6 @@ public class COPLADB extends Application {
         });
         
         //Opciones del menu Cobrador
-        MenuItem miAgregarCobrador = new MenuItem("Agregar Cobrador");
-        MenuItem miModificarCobrador = new MenuItem("Modificar/Consultar Cobrador");
-        MenuItem miEliminarCobrador = new MenuItem("Eliminar Cobrador");
-        MenuItem miEstadoCobrador = new MenuItem("Estado/Corte Cobrador");
-        
         miAgregarCobrador.setOnAction((event) -> {
             if(vbAreaTrabajo.getChildren().isEmpty()){
                 vbAreaTrabajo.getChildren().add(vRegistrarCobrador());
@@ -306,13 +339,7 @@ public class COPLADB extends Application {
             }
         });
 
-        
         //Opciones del menu Inventario
-        MenuItem miAgregarProducto = new MenuItem("Agregar Producto");
-        MenuItem miModificarProducto = new MenuItem("Modificar/Consultar Producto");
-        MenuItem miEliminarProducto = new MenuItem("Eliminar Producto");
-        MenuItem miEstadisticasProductos = new MenuItem("Estadisticas de Productos");
-
         miAgregarProducto.setOnAction((event) -> {
             if(vbAreaTrabajo.getChildren().isEmpty()){
                 vbAreaTrabajo.getChildren().add(vRegistrarProducto());
@@ -340,12 +367,8 @@ public class COPLADB extends Application {
             }
         });
         
-        //Opciones del menu Gastos
-        MenuItem miAgregarGastos = new MenuItem("Agregar Gasto");
-        MenuItem miModificarGastos = new MenuItem("Modificar/Consultar Gasto");
-        MenuItem miEliminarGastos = new MenuItem("Eliminar Gasto");
-        MenuItem miAcumuladoCaja = new MenuItem("Acumulado en caja");
         
+        //Opciones del menu Gastos
         miAgregarGastos.setOnAction((event) -> {
             if(vbAreaTrabajo.getChildren().isEmpty()){
                 vbAreaTrabajo.getChildren().add(vRegistrarGastos());
@@ -373,13 +396,8 @@ public class COPLADB extends Application {
             }
         });        
         
-        //Opciones del menu Herramientas
-        //MenuItem miGestionarUsuarios = new MenuItem("Gestionar Usuarios");
-        MenuItem miNuevoUsuario = new MenuItem("Nuevo Usuario");
-        MenuItem miModificarUsuario = new MenuItem("Modificar Usuario");
-        MenuItem miEliminarUsuario = new MenuItem("Eliminar Usuario");
-        MenuItem miAccesosUsuario = new MenuItem("Accesos a Usuario");
 
+        //Opciones del menu Herramientas
         miNuevoUsuario.setOnAction((event) -> {
               if (vbAreaTrabajo.getChildren().size() <= 0){ 
                vbAreaTrabajo.getChildren().addAll(vistaNuevoUsuario());
@@ -422,11 +440,7 @@ public class COPLADB extends Application {
         
         Menu submenuUsuarios = new Menu("Usuarios");
         submenuUsuarios.getItems().addAll(miNuevoUsuario, miModificarUsuario, miEliminarUsuario, miAccesosUsuario);        
-        MenuItem miGestionBonos = new MenuItem("Gestion Bonos");
-        
 
-        
-        MenuItem miSalir = new MenuItem("Salir del Sistema");
         miSalir.setOnAction(((event) -> {
                 primaryStage.close();
           }));
@@ -479,6 +493,152 @@ public class COPLADB extends Application {
         //primaryStage.show();
         loginEmpresa();
     }
+    public void obtieneAccesos(){
+        //Alert aviso = new Alert(Alert.AlertType.WARNING);
+        //aviso.setContentText("accesos obtenidos");
+        
+        System.out.println("Usuario: "+usua.getNombre());
+        
+        lstWhere.clear();
+        lstWhere.add("id_usuario ="+usua.getId_usuario());
+        actAcce = acceDAO.consultaAccesos(lstWhere).get(0);
+        
+        nueva_tarjetas=false;
+        modificar_consultar_Tarjeta=false;
+        eliminar_tarjeta=false;
+        asignar_tarjeta=false;
+        estado_cobranza=false;
+        agregar_cliente=false;
+        modificar_consultar_cliente=false;
+        eliminar_cliente=false;    
+        lista_negra_cliente=false;
+        agregar_vendedor=false;
+        modificar_consultar_vendedor=false;  
+        eliminar_vendedor=false;
+        agregar_cobrador=false;
+        modificar_consultar_cobrador=false;  
+        eliminar_cobrador=false;
+        estado_corte_cobrador=false;
+        agregar_producto=false;  
+        modificar_consultar_producto=false;  
+        eliminar_producto=false;
+        estadisticas_producto=false;  
+        agregar_gasto=false;  
+        modificar_consultar_gasto=false;
+        eliminar_gasto=false;
+        acumulado_caja=false;
+        nuevo_usuario=false;
+        modificar_usuario=false;
+        eliminar_usuario=false; 
+        acceso_usuarios=false;
+        gestion_bonos=false;
+        
+        nueva_tarjetas = actAcce.getNueva_tarjetas();
+        modificar_consultar_Tarjeta = actAcce.getModificar_consultar_Tarjeta();
+        eliminar_tarjeta = actAcce.getEliminar_tarjeta();
+        asignar_tarjeta = actAcce.getAsignar_tarjeta();
+        estado_cobranza = actAcce.getEstado_cobranza();
+        agregar_cliente = actAcce.getAgregar_cliente();
+        modificar_consultar_cliente = actAcce.getModificar_consultar_cliente();
+        eliminar_cliente = actAcce.getEliminar_cliente();
+        lista_negra_cliente = actAcce.getLista_negra_cliente();
+        agregar_vendedor = actAcce.getAgregar_vendedor();
+        modificar_consultar_vendedor = actAcce.getModificar_consultar_vendedor();
+        eliminar_vendedor = actAcce.getEliminar_vendedor();
+        agregar_cobrador = actAcce.getAgregar_cobrador();
+        modificar_consultar_cobrador = actAcce.getModificar_consultar_cobrador();
+        eliminar_cobrador = actAcce.getEliminar_cobrador();
+        estado_corte_cobrador = actAcce.getEstado_corte_cobrador();
+        agregar_producto = actAcce.getAgregar_producto();
+        modificar_consultar_producto = actAcce.getModificar_consultar_producto();
+        eliminar_producto = actAcce.getEliminar_producto();
+        estadisticas_producto = actAcce.getEstadisticas_producto();
+        agregar_gasto = actAcce.getAgregar_gasto();
+        modificar_consultar_gasto = actAcce.getModificar_consultar_gasto();
+        eliminar_gasto = actAcce.getEliminar_gasto();
+        acumulado_caja = actAcce.getAcumulado_caja();
+        nuevo_usuario = actAcce.getNuevo_usuario();
+        modificar_usuario = actAcce.getModificar_usuario();
+        eliminar_usuario = actAcce.getEliminar_usuario();
+        acceso_usuarios = actAcce.getAcceso_usuarios();
+        gestion_bonos = actAcce.getGestion_bonos();
+
+
+        nueva_tarjetas=!nueva_tarjetas;
+        miNuevaTarjeta.setDisable(nueva_tarjetas);
+	modificar_consultar_Tarjeta=!modificar_consultar_Tarjeta;
+        miModificarTarjeta.setDisable(modificar_consultar_Tarjeta);
+	eliminar_tarjeta=!eliminar_tarjeta;
+        miEliminarTarjeta.setDisable(eliminar_tarjeta);
+        asignar_tarjeta=!asignar_tarjeta;
+        miAsignarTarjetas.setDisable(asignar_tarjeta);
+        estado_cobranza=!estado_cobranza;
+        miEstadoTarjetas.setDisable(estado_cobranza);
+        agregar_cliente=!agregar_cliente;
+        miRegistrarClientes.setDisable(agregar_cliente);
+        modificar_consultar_cliente=!modificar_consultar_cliente;
+        miModificarClientes.setDisable(modificar_consultar_cliente);
+        eliminar_cliente=!eliminar_cliente;
+        miEliminarClientes.setDisable(eliminar_cliente);        
+        lista_negra_cliente=!lista_negra_cliente;
+        miListaNegraClientes.setDisable(lista_negra_cliente);
+        agregar_vendedor=!agregar_vendedor;
+        miAgregarVendedor.setDisable(agregar_vendedor);
+        modificar_consultar_vendedor=!modificar_consultar_vendedor;
+        miModificarVendedor.setDisable(modificar_consultar_vendedor);
+        eliminar_vendedor=!eliminar_vendedor;
+        miEliminarVendedor.setDisable(eliminar_vendedor);
+        agregar_cobrador=!agregar_cobrador;
+        miAgregarCobrador.setDisable(agregar_cobrador);
+        modificar_consultar_cobrador=!modificar_consultar_cobrador;
+        miModificarCobrador.setDisable(modificar_consultar_cobrador);        
+        eliminar_cobrador=!eliminar_cobrador;        
+        miEliminarCobrador.setDisable(eliminar_cobrador);
+        estado_corte_cobrador=!estado_corte_cobrador;
+        miEstadoCobrador.setDisable(estado_corte_cobrador);        
+        agregar_producto=!agregar_producto;
+        miAgregarProducto.setDisable(agregar_producto);
+        modificar_consultar_producto=!modificar_consultar_producto;
+        miModificarProducto.setDisable(modificar_consultar_producto);
+        eliminar_producto=!eliminar_producto;
+        miEliminarProducto.disableProperty().set(eliminar_producto);
+        estadisticas_producto=!estadisticas_producto;
+        miEstadisticasProductos.disableProperty().set(estadisticas_producto);
+        agregar_gasto=!agregar_gasto;
+        miAgregarGastos.disableProperty().setValue(agregar_gasto);
+        modificar_consultar_gasto=!modificar_consultar_gasto;
+        miModificarGastos.setDisable(modificar_consultar_gasto);
+        eliminar_gasto=!eliminar_gasto;
+        miEliminarGastos.setDisable(eliminar_gasto);
+        acumulado_caja=!acumulado_caja;
+        miAcumuladoCaja.setDisable(acumulado_caja);
+        nuevo_usuario=!nuevo_usuario;
+        miNuevoUsuario.setDisable(nuevo_usuario);
+        modificar_usuario=!modificar_usuario;
+        miModificarUsuario.setDisable(modificar_usuario);
+        eliminar_usuario=!eliminar_usuario;
+        miEliminarUsuario.setDisable(eliminar_usuario);
+        acceso_usuarios=!acceso_usuarios;
+        miAccesosUsuario.setDisable(acceso_usuarios);
+        gestion_bonos=!gestion_bonos;
+        miGestionBonos.setDisable(gestion_bonos);
+
+        
+/*        nomUsuario=usua.getUsuario();
+        infoLogin.setPadding(new Insets(5, 5, 5, 5));
+        infoLogin.setHgap(10);
+        infoLogin.setVgap(1);
+        infoLogin.setAlignment(Pos.BOTTOM_RIGHT);
+   
+        LocalDate today = LocalDate.now();
+        String hoy = today.format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+        LocalTime time = LocalTime.now(); 
+        String hora = time.format(DateTimeFormatter.ofPattern("hh:mm"));
+        Label lbEmpresa  = new Label("Empresa: "+Empresa.get(EmpresaPos).toString()+" Usuario: "+nomUsuario);
+	Label lbFecha  = new Label("Usted ingreso el "+hoy.toString()+" a las "+hora.toString());
+        infoLogin.add(lbEmpresa,0,0);        
+        infoLogin.add(lbFecha, 0, 1); */       
+    }     
     public void loginEmpresa(){
         Stage loginStage = new Stage();
         loginStage.getIcons().add(new Image(getClass().getResourceAsStream("recursos/IconSF.png")));
@@ -531,10 +691,12 @@ public class COPLADB extends Application {
                 uslogin = usloginDAO.consultaUnUsuario(tfUsuario.getText());
                 usua = uslogin;
                 if (tfContrasena.getText().equals(uslogin.getClaveAcceso())){
+                        
                         aviso.setAlertType(Alert.AlertType.INFORMATION);
                         aviso.setContentText("Acceso Permitido");
                         //Optional<ButtonType> action = aviso.showAndWait();
                         loginStage.close();
+                        obtieneAccesos();
                         primaryStageLocal.show();
                         //aviso.setContentText("Acceso no permitido");
                         Optional<ButtonType> action = aviso.showAndWait();
@@ -1518,7 +1680,7 @@ public class COPLADB extends Application {
         gpFiltroFechaCobro.add(lbFiltrarFechaCobro, 0, 0);
         gpFiltroFechaCobro.add(dpFiltrarFechaCobro, 1, 0);
         gpFiltroFechaCobro.add(btnFiltrarFecha, 2, 0);
-            
+        
         //Tabla Tarjetas
        
         Label lbTablaTarjetas = new Label("Tarjetas Seleccionadas:");
@@ -1677,6 +1839,31 @@ public class COPLADB extends Application {
         Label lbCantCobrada = new Label("Cant. Cobrada: ");
         Label lbCantCobradaValor = new Label("$ 00.00");
         
+        // Calculo de Comision
+        Label lbComision = new Label ("Comision: ");
+        TextField tfComision = new TextField();
+        Label lbPorcentajeComision = new Label ("% Comision: ");
+        TextField tfPorcentajeComision = new TextField();
+    
+        Button btnCalulaComision = new Button("Calcular Comision");
+        btnCalulaComision.setOnAction((event) -> {
+            tfComision.setText(String.valueOf(PorComision));
+            comision =  totalCobrado * Float.valueOf(tfPorcentajeComision.getText());
+            tfComision.setText(String.valueOf(comision));
+        });
+        
+        GridPane gpCalculoComision = new GridPane();
+        gpCalculoComision.setPadding(new Insets(5,5,5,5));
+        gpCalculoComision.setVgap(5);
+        gpCalculoComision.setHgap(5);
+        gpCalculoComision.add(lbPorcentajeComision, 0, 0);
+        gpCalculoComision.add(tfPorcentajeComision, 1, 0);
+        gpCalculoComision.add(btnCalulaComision, 2, 0);        
+        gpCalculoComision.add(lbComision, 0, 1);        
+        gpCalculoComision.add(tfComision, 1, 1);        
+        
+        
+        
         //Label lbSaldoPendiente = new Label("Saldo Pendiente: ");
         //Label lbSaldoPendienteValor = new Label("$ 00.00");
         
@@ -1701,10 +1888,13 @@ public class COPLADB extends Application {
             }
             tvTarjetas.getItems().clear();
             tvTarjetas.setItems(lstItems);
-            float totalCobrado =0;
+
+            tfPorcentajeComision.setText(String.valueOf(PorComision));
             for(tarjeta ta:lstItems){
                 totalCobrado = totalCobrado + ta.getUltimoPago();
             }
+            comision =  totalCobrado * PorComision;
+            tfComision.setText(String.valueOf(comision));
             lbCantCobradaValor.setText("$ "+String.valueOf(totalCobrado));
         });
         
@@ -2513,7 +2703,7 @@ public class COPLADB extends Application {
         tpPpal.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         
         VBox vbTablaTarjetas = new VBox();
-        vbTablaTarjetas.getChildren().addAll(gpFiltroFechaCobro, lbTablaTarjetas, tvTarjetas, gpCalculo);
+        vbTablaTarjetas.getChildren().addAll(gpFiltroFechaCobro, lbTablaTarjetas, tvTarjetas, gpCalculo, gpCalculoComision);
         
         HBox hbMain = new HBox();
         hbMain.setSpacing(15);
@@ -6871,34 +7061,34 @@ public class COPLADB extends Application {
                             miAcce=acceDAO.consultaAccesos(lstWhere).get(0);
                             System.out.println("Si entro : "+miAcce.getNueva_tarjetas());
                             chNuevaTarjeta.setSelected(miAcce.getNueva_tarjetas());
-                            chModificarTarjeta.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarTarjeta.setSelected(miAcce.getNueva_tarjetas());
-                            chAsignarTarjeta.setSelected(miAcce.getNueva_tarjetas());
-                            chEstadoCobranza.setSelected(miAcce.getNueva_tarjetas());
-                            chAgregarCliente.setSelected(miAcce.getNueva_tarjetas());
-                            chModificarCliente.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarCliente.setSelected(miAcce.getNueva_tarjetas());
-                            chListaNegraCliente.setSelected(miAcce.getNueva_tarjetas());
-                            chAgregarVendedor.setSelected(miAcce.getNueva_tarjetas());
-                            chModificarVendedor.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarVendedor.setSelected(miAcce.getNueva_tarjetas());
-                            chAgregarCobrador.setSelected(miAcce.getNueva_tarjetas());
-                            chModificarCobrador.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarCobrador.setSelected(miAcce.getNueva_tarjetas());
-                            chEstadoCobrador.setSelected(miAcce.getNueva_tarjetas());
-                            chAgregarProducto.setSelected(miAcce.getNueva_tarjetas());
-                            chModificarProducto.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarProducto.setSelected(miAcce.getNueva_tarjetas());
-                            chEstadisticaProducto.setSelected(miAcce.getNueva_tarjetas());
-                            chAgregarGastos.setSelected(miAcce.getNueva_tarjetas());
-                            chModificadorGastos.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarGasto.setSelected(miAcce.getNueva_tarjetas());
-                            chAcumuladoCaja.setSelected(miAcce.getNueva_tarjetas());
-                            chNuevoUsuario.setSelected(miAcce.getNueva_tarjetas());
-                            chModificarUsuario.setSelected(miAcce.getNueva_tarjetas());
-                            chEliminarUsuario.setSelected(miAcce.getNueva_tarjetas());
-                            chAccesoUsuario.setSelected(miAcce.getNueva_tarjetas());
-                            chGestionBonos.setSelected(miAcce.getNueva_tarjetas());
+                            chModificarTarjeta.setSelected(miAcce.getModificar_consultar_Tarjeta());
+                            chEliminarTarjeta.setSelected(miAcce.getEliminar_tarjeta());
+                            chAsignarTarjeta.setSelected(miAcce.getAsignar_tarjeta());
+                            chEstadoCobranza.setSelected(miAcce.getEstado_cobranza());
+                            chAgregarCliente.setSelected(miAcce.getAgregar_cliente());
+                            chModificarCliente.setSelected(miAcce.getModificar_consultar_cliente());
+                            chEliminarCliente.setSelected(miAcce.getEliminar_cliente());
+                            chListaNegraCliente.setSelected(miAcce.getLista_negra_cliente());
+                            chAgregarVendedor.setSelected(miAcce.getAgregar_vendedor());
+                            chModificarVendedor.setSelected(miAcce.getModificar_consultar_vendedor());
+                            chEliminarVendedor.setSelected(miAcce.getEliminar_vendedor());
+                            chAgregarCobrador.setSelected(miAcce.getAgregar_cobrador());
+                            chModificarCobrador.setSelected(miAcce.getModificar_consultar_cobrador());
+                            chEliminarCobrador.setSelected(miAcce.getEliminar_cobrador());
+                            chEstadoCobrador.setSelected(miAcce.getEstado_corte_cobrador());
+                            chAgregarProducto.setSelected(miAcce.getAgregar_producto());
+                            chModificarProducto.setSelected(miAcce.getModificar_consultar_producto());
+                            chEliminarProducto.setSelected(miAcce.getEliminar_producto());
+                            chEstadisticaProducto.setSelected(miAcce.getEstadisticas_producto());
+                            chAgregarGastos.setSelected(miAcce.getAgregar_gasto());
+                            chModificadorGastos.setSelected(miAcce.getModificar_consultar_gasto());
+                            chEliminarGasto.setSelected(miAcce.getEliminar_gasto());
+                            chAcumuladoCaja.setSelected(miAcce.getAcumulado_caja());
+                            chNuevoUsuario.setSelected(miAcce.getNuevo_usuario());
+                            chModificarUsuario.setSelected(miAcce.getModificar_usuario());
+                            chEliminarUsuario.setSelected(miAcce.getEliminar_usuario());
+                            chAccesoUsuario.setSelected(miAcce.getAcceso_usuarios());
+                            chGestionBonos.setSelected(miAcce.getGestion_bonos());
  
                     }
                 
@@ -6992,23 +7182,25 @@ public class COPLADB extends Application {
         gpPpal.add(lbEliminarVendedor, 1, 17);
         gpPpal.add(chEliminarVendedor, 2, 17);
         gpPpal.add(lbAgregarCobrador, 1, 18);
-        gpPpal.add(chAgregarCobrador, 2, 18);
-        gpPpal.add(lbEliminarCobrador, 1, 19);
-        gpPpal.add(chEliminarCobrador, 2, 19);
-        gpPpal.add(lbEstadoCobrador, 1, 20);
-        gpPpal.add(chEstadoCobrador, 2, 20);
-        gpPpal.add(lbAgregarProducto, 1, 21);
-        gpPpal.add(chAgregarProducto, 2, 21);
-        gpPpal.add(lbModificarProducto, 1, 22);
-        gpPpal.add(chModificarProducto, 2, 22);        
-        gpPpal.add(lbEliminarProducto , 1, 23);
-        gpPpal.add(chEliminarProducto , 2, 23);
-        gpPpal.add(lbEstadisticaProducto , 1, 24);
-        gpPpal.add(chEstadisticaProducto , 2, 24);
-        gpPpal.add(lbAgregarGastos , 1, 25);
-        gpPpal.add(chAgregarGastos , 2, 25);        
-        gpPpal.add(lbModificarGastos , 1, 26);
-        gpPpal.add(chModificadorGastos , 2, 26);
+        gpPpal.add(chAgregarCobrador, 2, 18);//chModificarCobrador
+        gpPpal.add(lbModificarCobrador, 1, 19);
+        gpPpal.add(chModificarCobrador, 2, 19);
+        gpPpal.add(lbEliminarCobrador, 1, 20);
+        gpPpal.add(chEliminarCobrador, 2, 20);
+        gpPpal.add(lbEstadoCobrador, 1, 21);
+        gpPpal.add(chEstadoCobrador, 2, 21);
+        gpPpal.add(lbAgregarProducto, 1, 22);
+        gpPpal.add(chAgregarProducto, 2, 22);
+        gpPpal.add(lbModificarProducto, 1, 23);
+        gpPpal.add(chModificarProducto, 2, 23);        
+        gpPpal.add(lbEliminarProducto , 1, 24);
+        gpPpal.add(chEliminarProducto , 2, 24);
+        gpPpal.add(lbEstadisticaProducto , 1, 25);
+        gpPpal.add(chEstadisticaProducto , 2, 25);
+        gpPpal.add(lbAgregarGastos , 1, 26);
+        gpPpal.add(chAgregarGastos , 2, 26);        
+        gpPpal.add(lbModificarGastos , 1, 27);
+        gpPpal.add(chModificadorGastos , 2, 27);
         gpPpal.add(lbEliminarGasto , 3, 6);
         gpPpal.add(chEliminarGasto , 4, 6);
         gpPpal.add(lbAcumuladoCaja , 3, 7);
@@ -7027,8 +7219,8 @@ public class COPLADB extends Application {
         
         gpPpal.setHalignment(btnCancelar, HPos.CENTER);
         gpPpal.setHalignment(btnGuardar, HPos.LEFT);
-        gpPpal.add(btnCancelar,3,26);
-        gpPpal.add(btnGuardar,4,26); 
+        gpPpal.add(btnCancelar,3,27);
+        gpPpal.add(btnGuardar,4,27); 
         gpPpal.setAlignment(Pos.CENTER);
        
         HBox hbBuscar = new HBox();

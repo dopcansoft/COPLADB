@@ -1,0 +1,77 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch COPLADB",
+            "request": "launch",
+            "mainClass": "copladb.COPLADB",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch clienteDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.clienteDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch cobradorDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.cobradorDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch inventarioDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.inventarioDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch pagosProyectadosDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.pagosProyectadosDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch pagosRealizadosDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.pagosRealizadosDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch tarjetaAsignadasDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.tarjetaAsignadasDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch tarjetaDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.tarjetaDAO",
+            "projectName": "COPLADB_43de4921"
+        },
+        {
+            "type": "java",
+            "name": "Launch vendedorDAO",
+            "request": "launch",
+            "mainClass": "copladb.DAO.vendedorDAO",
+            "projectName": "COPLADB_43de4921"
+        }
+    ]
+}

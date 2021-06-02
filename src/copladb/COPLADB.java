@@ -1591,7 +1591,8 @@ public class COPLADB extends Application {
         vbNuevaTarjeta.getChildren().add(hbMain);
         return vbNuevaTarjeta;
     }
-    private VBox vModificarConsultarTarjeta(){
+    private VBox vModificarConsultarTarjeta()
+    {
         
         if (!lstobPagProyectados.isEmpty()){lstobPagProyectados.clear();}
         if (!lstobPagRealizados.isEmpty()){lstobPagRealizados.clear();}
@@ -1649,6 +1650,9 @@ public class COPLADB extends Application {
         RadioButton rbBusquedaCobradores = new RadioButton("Cobradores");
         rbBusquedaCobradores.setToggleGroup(tgSelecBusqueda);
         
+        RadioButton rbBusquedaVendedor = new RadioButton("Vendedores");
+        rbBusquedaVendedor.setToggleGroup(tgSelecBusqueda);
+        
         RadioButton rbBusquedaRegion = new RadioButton("Region");
         rbBusquedaRegion.setToggleGroup(tgSelecBusqueda);
         
@@ -1658,10 +1662,15 @@ public class COPLADB extends Application {
         TextField tfBusqCliente = new TextField();
         DatePicker dpBusqFecha = new DatePicker(LocalDate.now());
         TextField tfBusqAtraso = new TextField();
+        
         lstWhere.clear();
         lstWhere.add("idCobrador is not null");
         ObservableList<String> lstCobradores = FXCollections.observableArrayList(cobraDAO.consultarNombreCobradores(lstWhere));        
         ComboBox cbCobrador = new ComboBox(lstCobradores);
+        
+        ObservableList<String> lstBscVendedores = FXCollections.observableArrayList(venDAO.ListarVendedores());        
+        ComboBox cbBuscarVendedor = new ComboBox(lstBscVendedores);
+        
         ObservableList<String> lstRegion = FXCollections.observableArrayList(tarDAO.consultarDistinctRegion());
         ComboBox cbBusqRegion = new ComboBox(lstRegion);
         cbBusqRegion.setPrefWidth(250);
@@ -1717,6 +1726,10 @@ public class COPLADB extends Application {
         TableColumn cobradorColumna = new TableColumn("Cobrador");
         cobradorColumna.setCellValueFactory(new PropertyValueFactory<>("Cobrador"));
         cobradorColumna.setPrefWidth(135);
+        
+        TableColumn vendedorColumna = new TableColumn("Vendedor");
+        vendedorColumna.setCellValueFactory(new PropertyValueFactory<>("NomVendedor"));
+        vendedorColumna.setPrefWidth(135);
 
         TableColumn proximoPagoColumna = new TableColumn("Fech Prox. Pago");
         proximoPagoColumna.setCellValueFactory(new PropertyValueFactory<>("FecProxPag"));
@@ -2016,6 +2029,22 @@ public class COPLADB extends Application {
                     tvTarjetas.getColumns().addAll(folioTarjetaColum, precioColum,saldoColum, engancheColum, ClienteColumna, regionColumna, 
                                                    fechaUltimoPagoColum, ultimoPagoColum);
             }
+            if (rbBusquedaVendedor.isSelected()){
+                    
+                    lstWhere.clear();
+                    lstWhere.add("Nombre like '%"+cbBuscarVendedor.getValue().toString()+"%' ");
+                    venDTO= venDAO.consultarVendedor(lstWhere).get(0);
+                    
+                    lstWhere.clear();
+                    lstWhere.add("t1.idVendedor = "+venDTO.getIdVendedor());
+                    if (!tvTarjetas.getItems().isEmpty()) tvTarjetas.getItems().clear();
+                    tvTarjetas.setItems(FXCollections.observableArrayList(tarDAO.consultarTarjetasPorVendedor(lstWhere)));
+                    //tfTarjetasAsignadas.setText(String.valueOf(tvTarjetasAsignadas.getItems().size()));
+                     
+                    tvTarjetas.getColumns().clear();
+                    tvTarjetas.getColumns().addAll(folioTarjetaColum, precioColum,saldoColum, engancheColum, ClienteColumna, vendedorColumna, regionColumna, 
+                                                   fechaUltimoPagoColum, ultimoPagoColum);
+            }            
             if (rbBusquedaRegion.isSelected()){
                 lstWhere.clear();
                 lstWhere.add("Region like '%"+cbBusqRegion.getValue().toString()+"%' ");
@@ -2571,7 +2600,9 @@ public class COPLADB extends Application {
         gpBusqueda.add(cbCobrador, 5, 2);
         gpBusqueda.add(rbBusquedaRegion, 6, 1);
         gpBusqueda.add(cbBusqRegion, 6, 2);
-        gpBusqueda.add(btnBuscaTarjetas, 7, 2);
+        gpBusqueda.add(rbBusquedaVendedor, 7, 1);
+        gpBusqueda.add(cbBuscarVendedor, 7, 2);
+        gpBusqueda.add(btnBuscaTarjetas, 8, 2);
         
         
         GridPane gpDatosTarjeta = new GridPane();
@@ -4799,6 +4830,135 @@ public class COPLADB extends Application {
         
         return vbDatosVendedor;
     } 
+    private VBox vEstadoVendedores(){
+        VBox vbPpal = new VBox();
+
+        Label lbTitulo = new Label("ESTADO DE LOS VENDEDORES");
+        lbTitulo.getStyleClass().add("titulo-vista");
+        lbTitulo.setAlignment(Pos.CENTER);
+        
+        ObservableList<XYChart.Data> aList = FXCollections.observableArrayList(
+            new XYChart.Data("Sem. 1", 7),
+            new XYChart.Data("Sem. 2", 10),
+            new XYChart.Data("Sem. 3", 5),
+            new XYChart.Data("Sem. 4", 2),
+            new XYChart.Data("Sem. 5", 15),
+            new XYChart.Data("Sem. 6", 21)
+        );
+        //ObservableList<String> categorias = FXCollections.observableArrayList();
+        ObservableList<String> categorias = FXCollections.observableArrayList("Sem. 1", "Sem. 2", "Sem. 3", "Sem. 4", "Sem. 5", "Sem. 6");
+
+        // Componentes de Seleccion
+        Label lbCoBradores = new Label("Cobradores: ");
+        lstWhere.clear();
+        lstWhere.add("idCobrador is not null");
+        ComboBox cbCobradores = new ComboBox(FXCollections.observableList(cobraDAO.consultarNombreCobradores(lstWhere)));
+        cbCobradores.setPrefWidth(180);
+        Label lbYear = new Label("Año: ");
+        TextField tfYear = new TextField();
+        tfYear.setPrefWidth(120);
+        
+        Label lbSemanInicial = new Label("Semana Inicial");
+        TextField tfSemanaInicial = new TextField();
+        tfSemanaInicial.setPrefWidth(220);
+        
+        Label lbSemanFinal = new Label("Semana Final");
+        TextField tfSemanaFinal = new TextField();
+        tfSemanaFinal.setPrefWidth(220);
+        
+        TableView tvTablaSemanas = new TableView();
+
+        Button btnBuscar = new Button ("Buscar");
+        btnBuscar.setOnAction((event) -> {
+            lstWhere.clear();
+            lstWhere.add("Nombre = '"+cbCobradores.getValue()+"' ");
+            cobrador cbrDTO = cobraDAO.consultarCobradores(lstWhere).get(0);            
+            lstWhere.clear();
+            lstWhere.add("pr.idTarjeta is not null");
+            lstWhere.add("pr.Tipo in('Parcialidad', 'Abono')");
+            lstWhere.add("ta.idCobrador = "+String.valueOf(cbrDTO.getIdCobrador())); 
+            lstWhere.add("year = '"+tfYear.getText()+"' ");
+            lstWhere.add("cast(semana as integer ) between "+tfSemanaInicial.getText() +" and " + tfSemanaFinal.getText());              
+            lstTarjetasAsigPorSemanaConPagos = FXCollections.observableList(tarAsigDAO.consultarTarjetasPagosPorSemana(lstWhere));
+             tvTablaSemanas.setItems(lstTarjetasAsigPorSemanaConPagos);
+            if (!aList.isEmpty())aList.clear();
+            if (!categorias.isEmpty())categorias.clear();
+            for (tarjetasAsigPorSemanaConPagosDTO t : lstTarjetasAsigPorSemanaConPagos){
+                String strSemana = "Sem.";
+                String concat = strSemana.concat(t.getSemana());
+                System.out.println("Semana: "+concat);
+                categorias.add(concat);
+                int totalPagosSemana = t.getCuantosPagos();
+                System.out.println("TotalporSemana: "+String.valueOf(totalPagosSemana) );
+                aList.add(new XYChart.Data(concat, totalPagosSemana));
+            }
+            
+        });
+        
+        // Grafica para evaluar el desempeño del cobrador por semana
+        Label lbGraficaCobradores = new Label("Grafica Cobradores: ");
+        ObservableList<XYChart.Series> seriesList = FXCollections.observableArrayList();
+        
+ 
+        seriesList.add(new XYChart.Series("Cant. Semanas", aList));
+
+        CategoryAxis xAx = new CategoryAxis(categorias);
+        Axis yAxis = new NumberAxis();// ("Cantidad", 0, 50, 5);
+        
+        BarChart bcGraficaCobrador = new BarChart(xAx, yAxis, seriesList);
+        bcGraficaCobrador.setMinSize(1200,250);
+        bcGraficaCobrador.setMaxSize(1200,250);
+        bcGraficaCobrador.setPrefSize(1200,250);
+
+        //Tabla Semanas
+        TableColumn SemanaColum = new TableColumn("Semana");
+        SemanaColum.setPrefWidth(300);
+        SemanaColum.setCellValueFactory(new PropertyValueFactory<>("semana"));
+  
+        TableColumn CantidadColum = new TableColumn("Cantidad");
+        CantidadColum.setPrefWidth(300);
+        CantidadColum.setCellValueFactory(new PropertyValueFactory<>("cuantosPagos"));
+        
+        TableColumn MontoCobradoColum = new TableColumn("Monto Cobrado");
+        MontoCobradoColum.setPrefWidth(300);
+        MontoCobradoColum.setCellValueFactory(new PropertyValueFactory<>("sumaMontos"));
+        
+        
+        tvTablaSemanas.setPrefSize(850, 200);
+        tvTablaSemanas.getColumns().addAll(SemanaColum, CantidadColum, MontoCobradoColum);
+       
+        
+        // Layouts
+        GridPane gpSeleccionCobrador = new GridPane();
+        gpSeleccionCobrador.setPadding(new Insets(5,5,5,5));
+        gpSeleccionCobrador.setVgap(10);
+        gpSeleccionCobrador.setHgap(10);
+        gpSeleccionCobrador.add(lbCoBradores, 0, 0);
+        gpSeleccionCobrador.add(cbCobradores, 1, 0);
+        gpSeleccionCobrador.add(lbYear, 2, 0);
+        gpSeleccionCobrador.add(tfYear, 3, 0);
+        gpSeleccionCobrador.add(lbSemanInicial, 4, 0);
+        gpSeleccionCobrador.add(tfSemanaInicial, 5, 0);
+        gpSeleccionCobrador.add(lbSemanFinal, 6, 0);
+        gpSeleccionCobrador.add(tfSemanaFinal, 7, 0);
+        gpSeleccionCobrador.add(btnBuscar, 8, 0);
+
+        GridPane gpGraficador = new GridPane();
+        gpGraficador.setPadding(new Insets(5,5,5,5));
+        gpGraficador.setVgap(10);
+        gpGraficador.setHgap(10);
+        gpGraficador.add(lbGraficaCobradores, 0, 0);
+        gpGraficador.add(bcGraficaCobrador, 0, 1);
+        
+        GridPane gpTablaSemanas = new GridPane();
+        gpTablaSemanas.setPadding(new Insets(5,5,5,5));
+        gpTablaSemanas.setVgap(5);
+        gpTablaSemanas.setHgap(6);
+        gpTablaSemanas.add(tvTablaSemanas, 0, 0);
+        
+        vbPpal.getChildren().setAll(gpSeleccionCobrador, gpGraficador, gpTablaSemanas);
+        return vbPpal;
+    }
     
     //Modulos de Cobradores
     private VBox vRegistrarCobrador() {

@@ -159,6 +159,84 @@ public class tarjetaDAO {
         }
         return lstTarjeta;
     }
+    
+    public List<tarjeta> consultarTarjetasPorVendedor( List<String> where){
+        List<tarjeta>  lstTarjeta= new ArrayList<>();
+        List<String> lstWhere = new ArrayList<>();
+        List<vendedor> lstVendedor = new ArrayList<>();
+        List<cliente> lstCliente = new ArrayList<>();
+        cliente cliDTO = new cliente();
+        vendedorDAO vendD = new vendedorDAO();
+        clienteDAO cliDAO = new clienteDAO();
+        List<pagosRealizados> lstPagosRealizados = new ArrayList<>();
+        pagosRealizadosDAO pagRealizados = new pagosRealizadosDAO();        
+
+        //StringBuilder sql= null;
+        StringBuilder Filtro = new StringBuilder();
+        Filtro.append(where.get(0));
+        where.remove(0);
+        if (!where.isEmpty()){
+                for (String i:where){
+                        Filtro.append(" AND "+i);
+                }			
+        }
+        Conexion conecta = new Conexion("cobranzaDB.db");
+        
+        String sql = "select t1.idTarjeta, t1.Folio, t1.idCliente, t1.Precio, t1.Enganche, t1.idVendedor, t2.Nombre, t1.Clasificacion, t1.TipoPago, t1.Region, "
+                + "t1.DiaCobro, t1.EnganchePend, t1.Saldo, t1.Fecha, t1.Pagos, t1.TipoPrecio from Tarjeta as t1 inner join Vendedores as t2 on t1.idVendedor = t2.idVendedor where "+Filtro.toString();       
+        System.out.println(sql);
+        try (
+            Connection con = conecta.conectaDB();
+             Statement stmt  = con.createStatement();
+             ResultSet rs  = stmt.executeQuery(sql))
+             {
+             while (rs.next()){
+                tarjeta tarj = new tarjeta();
+                tarj.setIdTarjeta(rs.getInt(1));
+                tarj.setFolio(rs.getString(2));
+                tarj.setIdCliente(rs.getInt(3));
+                    lstWhere.clear();
+                    lstWhere.add("idCliente = "+rs.getInt(3));
+                    cliDTO = cliDAO.consultarClientes(lstWhere).get(0);
+                tarj.setNomCliente(cliDTO.getNombre());
+                
+                tarj.setPrecio(rs.getFloat(4));
+                tarj.setEnganche(rs.getFloat(5));
+                tarj.setIdVendedor(rs.getInt(6));
+                /*    lstWhere.clear();
+                    lstWhere.add("idVendedor = "+rs.getInt(6));
+                    lstVendedor = vendD.consultarVendedor(lstWhere);
+                if (!lstVendedor.isEmpty()){
+                   tarj.setNomVendedor(lstVendedor.get(0).getNombre());
+                }*/
+                tarj.setNomVendedor(rs.getString(7));
+                
+                tarj.setClasificacion(rs.getString(8));
+                tarj.setTipoPago(rs.getString(9));
+                tarj.setRegion(rs.getString(10));
+                tarj.setDiaCobro(rs.getString(11));
+                tarj.setEnganchePend(rs.getFloat(12));
+                tarj.setSaldo(rs.getFloat(13));
+                tarj.setFecha(rs.getString(14));
+                tarj.setPagos(rs.getFloat(15));
+                tarj.setTipoPrecio(rs.getString(16));
+                    lstWhere.clear();
+                    lstWhere.add("idTarjeta= "+rs.getInt(1));
+                lstPagosRealizados=pagRealizados.consultarPagosRealizados(lstWhere);
+                if (!lstPagosRealizados.isEmpty()){
+                  tarj.setFechaUltimoPago(lstPagosRealizados.get(lstPagosRealizados.size()-1).getFecha());
+                  tarj.setUltimoPago(lstPagosRealizados.get(lstPagosRealizados.size()-1).getMonto());
+                }               
+                
+                lstTarjeta.add(tarj);
+             }
+             con.close();
+
+        } catch (SQLException e) {
+           System.out.println(e.getMessage());
+        }
+        return lstTarjeta;
+    }
 
     public List<tarjeta> consultarTarjetasCliente( List<String> where){
         List<tarjeta>  lstTarjeta= new ArrayList<>();

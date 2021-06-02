@@ -59,6 +59,40 @@ public List<vendedor> consultarVendedor(List<String> where){
     
 }
 
+public List<String> consultarNombreVendores(List<String> where){
+    List<String> lstNombreVendedor = new ArrayList<>();
+        //StringBuilder sql= null;
+        StringBuilder Filtro = new StringBuilder();
+        Filtro.append(where.get(0));
+        where.remove(0);
+        if (!where.isEmpty()){
+                for (String i:where){
+                        Filtro.append(" AND "+i);
+                }			
+        }
+        Conexion conecta = new Conexion("cobranzaDB.db");
+        //codigo_cliente, nombre, razon_social, domicilio_fiscal, telefono, rfc, email
+        String sql = "SELECT Nombre from Vendedores where "+Filtro.toString();
+        System.out.println(sql);
+        try (
+            Connection con = conecta.conectaDB();
+             Statement stmt  = con.createStatement();
+             ResultSet rs  = stmt.executeQuery(sql))
+             {
+             while (rs.next()){
+                String strNombreCobrador = new String();
+                strNombreCobrador = rs.getString(1);
+                lstNombreVendedor.add(strNombreCobrador);
+             }
+             con.close();
+
+        } catch (SQLException e) {
+           System.out.println(e.getMessage());
+        }
+        return lstNombreVendedor;
+    
+}
+
 public List<String> ListarVendedores(){
     List<String> lstVendedor = new ArrayList<>();
         //StringBuilder sql= null;

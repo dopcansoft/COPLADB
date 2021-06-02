@@ -170,6 +170,8 @@ public class COPLADB extends Application {
     MenuItem miAgregarVendedor = new MenuItem("Agregar Vendedor");
     MenuItem miModificarVendedor = new MenuItem("Modificar/Consultar Vendedor");
     MenuItem miEliminarVendedor = new MenuItem("Eliminar Vendedor");
+    MenuItem miEstadoVendedor = new MenuItem("Estado/Corte Vendedor");
+    
     //Opciones del menu Cobrador
     MenuItem miAgregarCobrador = new MenuItem("Agregar Cobrador");
     MenuItem miModificarCobrador = new MenuItem("Modificar/Consultar Cobrador");
@@ -299,6 +301,15 @@ public class COPLADB extends Application {
             }else{
                 vbAreaTrabajo.getChildren().clear();
                 vbAreaTrabajo.getChildren().add(vEliminarVendedor());
+            }
+        });
+        
+        miEstadoVendedor.setOnAction((event) -> {
+            if(vbAreaTrabajo.getChildren().isEmpty()){
+                vbAreaTrabajo.getChildren().add(vEstadoVendedores());
+            }else{
+                vbAreaTrabajo.getChildren().clear();
+                vbAreaTrabajo.getChildren().add(vEstadoVendedores());
             }
         });
         
@@ -454,7 +465,7 @@ public class COPLADB extends Application {
         Menu mClientes = new Menu("Clientes");
         mClientes.getItems().addAll(miRegistrarClientes, miModificarClientes, miEliminarClientes, miListaNegraClientes);
         Menu mVendedores = new Menu("Vendedores");
-        mVendedores.getItems().addAll(miAgregarVendedor, miModificarVendedor, miEliminarVendedor);
+        mVendedores.getItems().addAll(miAgregarVendedor, miModificarVendedor, miEliminarVendedor, miEstadoVendedor);
         Menu mCobradores = new Menu("Cobradores");
         mCobradores.getItems().addAll(miAgregarCobrador, miModificarCobrador, miEliminarCobrador, miEstadoCobrador);
         Menu mInventario = new Menu("Inventario");
@@ -595,7 +606,8 @@ public class COPLADB extends Application {
         eliminar_cobrador=!eliminar_cobrador;        
         miEliminarCobrador.setDisable(eliminar_cobrador);
         estado_corte_cobrador=!estado_corte_cobrador;
-        miEstadoCobrador.setDisable(estado_corte_cobrador);        
+        miEstadoCobrador.setDisable(estado_corte_cobrador);
+        miEstadoVendedor.setDisable(estado_corte_cobrador);
         agregar_producto=!agregar_producto;
         miAgregarProducto.setDisable(agregar_producto);
         modificar_consultar_producto=!modificar_consultar_producto;
@@ -1591,8 +1603,7 @@ public class COPLADB extends Application {
         vbNuevaTarjeta.getChildren().add(hbMain);
         return vbNuevaTarjeta;
     }
-    private VBox vModificarConsultarTarjeta()
-    {
+    private VBox vModificarConsultarTarjeta(){
         
         if (!lstobPagProyectados.isEmpty()){lstobPagProyectados.clear();}
         if (!lstobPagRealizados.isEmpty()){lstobPagRealizados.clear();}

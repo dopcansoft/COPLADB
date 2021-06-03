@@ -13,12 +13,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import copladb.DAO.vendedorDAO;
-import copladb.DTO.vendedor;
 import copladb.DTO.cliente;
-import copladb.DAO.clienteDAO;
 import copladb.DTO.pagosRealizados;
-import copladb.DAO.pagosRealizadosDAO;
+import copladb.DTO.vendedor;
+import copladb.DTO.tarjetaPorSemana;
 
 /**
  *
@@ -81,6 +79,49 @@ public class tarjetaDAO {
            System.out.println(e.getMessage());
         }
         return lstTarjeta;
+    }
+    
+    public List<tarjetaPorSemana> consultarTarjetasEnganchesPorSemana( List<String> where){
+        List<tarjetaPorSemana>  lstTarjetasEnganches= new ArrayList<>();
+        List<String> lstWhere = new ArrayList<>();
+        StringBuilder Filtro = new StringBuilder();
+        Filtro.append(where.get(0));
+        where.remove(0);
+        if (!where.isEmpty()){
+                for (String i:where){
+                        Filtro.append(" AND "+i);
+                }			
+        }
+        Conexion conecta = new Conexion("cobranzaDB.db");
+        /* Ejemplo
+        select ta.idVendedor, strfTime('%Y',ta.Fecha) as year, strfTime('%W',ta.Fecha) as semana, sum(ta.Enganche) as sumaEnganches, count(ta.Enganche) as cuentaEnganches 
+        from tarjeta ta  where idVendedor = 3 and year ='2021' and cast(semana as integer ) between 1 and 20 group by semana
+        */
+        String sql = "select ta.idVendedor, strfTime('%Y',ta.Fecha) as year, strfTime('%W',ta.Fecha) as semana, "
+                + "sum(ta.Enganche) as sumaEnganches, count(ta.Enganche) as cuentaEnganches  "
+                + "from tarjeta ta  where "+Filtro.toString()+ " group by semana";
+        System.out.println(sql);
+        try (
+            Connection con = conecta.conectaDB();
+             Statement stmt  = con.createStatement();
+             ResultSet rs  = stmt.executeQuery(sql))
+             {
+             while (rs.next()){
+                tarjetaPorSemana tarjEnganches = new tarjetaPorSemana();
+                tarjEnganches.setIdVendedor(rs.getInt(1));
+                tarjEnganches.setYear(rs.getString(2));
+                tarjEnganches.setSemana(rs.getString(3));
+                tarjEnganches.setSumaEnganches(rs.getFloat(4));
+                tarjEnganches.setCuentaEngaches(rs.getInt(5));
+                
+                lstTarjetasEnganches.add(tarjEnganches);
+             }
+             con.close();
+
+        } catch (SQLException e) {
+           System.out.println(e.getMessage());
+        }
+        return lstTarjetasEnganches;
     }
 
     public List<tarjeta> consultarTarjetasPorCobrador( List<String> where){

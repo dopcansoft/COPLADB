@@ -437,6 +437,22 @@ public class tarjetaDAO {
             }
         }
 
+    public void modificarSaldo(int idTarjeta, float Saldo) {
+        
+            String sql = "UPDATE Tarjeta SET Saldo = ? "
+                    + "WHERE idTarjeta = ? ";
+          Conexion conecta = new Conexion("cobranzaDB.db");
+            try (Connection con = conecta.conectaDB();
+                PreparedStatement pstmt = con.prepareStatement(sql)) {
+                pstmt.setFloat(1, Saldo);
+                pstmt.setInt(2, idTarjeta);
+                System.out.println(sql);
+                // update 
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }    
     public void eliminarTarjeta(int id) {
         String sql = "DELETE FROM Tarjeta WHERE idTarjeta = "+String.valueOf(id)+"; ";
         System.out.println(sql);

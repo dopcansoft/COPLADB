@@ -109,7 +109,7 @@ public class pagosRealizadosDAO {
             }
         }
 
-    public void eliminarPagoProyectado(int id) {
+    public void eliminarPagoRealizado(int id) {
         String sql = "DELETE FROM Pagos_realizados WHERE idPagoRealizado = ?";
         Conexion conecta = new Conexion("cobranzaDB.db");
         try (Connection con = conecta.conectaDB();

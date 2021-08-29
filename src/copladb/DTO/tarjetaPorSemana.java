@@ -17,6 +17,7 @@ public class tarjetaPorSemana {
     private String semana;
     private int cuentaEngaches ;
     private float sumaEnganches;
+    private float sumaPrecios;
 
     public Integer getIdVendedor() {
         return idVendedor;
@@ -64,6 +65,14 @@ public class tarjetaPorSemana {
 
     public void setSumaEnganches(float sumaEnganches) {
         this.sumaEnganches = sumaEnganches;
+    }
+
+    public float getSumaPrecios() {
+        return sumaPrecios;
+    }
+
+    public void setSumaPrecios(float sumaPrecios) {
+        this.sumaPrecios = sumaPrecios;
     }
 
 

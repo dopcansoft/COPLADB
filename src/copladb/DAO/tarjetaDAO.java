@@ -98,7 +98,7 @@ public class tarjetaDAO {
         from tarjeta ta  where idVendedor = 3 and year ='2021' and cast(semana as integer ) between 1 and 20 group by semana
         */
         String sql = "select ta.idVendedor, strfTime('%Y',ta.Fecha) as year, strfTime('%W',ta.Fecha) as semana, "
-                + "sum(ta.Enganche) as sumaEnganches, count(ta.Enganche) as cuentaEnganches  "
+                + "sum(ta.precio) as sumaPrecio, sum(ta.Enganche) as sumaEnganches, count(ta.Enganche) as cuentaEnganches  "
                 + "from tarjeta ta  where "+Filtro.toString()+ " group by semana";
         System.out.println(sql);
         try (
@@ -111,8 +111,9 @@ public class tarjetaDAO {
                 tarjEnganches.setIdVendedor(rs.getInt(1));
                 tarjEnganches.setYear(rs.getString(2));
                 tarjEnganches.setSemana(rs.getString(3));
-                tarjEnganches.setSumaEnganches(rs.getFloat(4));
-                tarjEnganches.setCuentaEngaches(rs.getInt(5));
+                tarjEnganches.setSumaPrecios(rs.getFloat(4));
+                tarjEnganches.setSumaEnganches(rs.getFloat(5));
+                tarjEnganches.setCuentaEngaches(rs.getInt(6));
                 
                 lstTarjetasEnganches.add(tarjEnganches);
              }

@@ -1,0 +1,28 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "JC",
+            "command": "java",
+            "linux":{
+                "command": "/usr/lib/jvm/jdk1.8.0_271/bin/javac" 
+            },
+            "args": [
+                "${file}"
+            ]
+        },
+        {
+            "label": "JR",
+            "command": "java",
+            "linux":{
+                "command": "/usr/lib/jvm/jdk1.8.0_271/bin/java" 
+            },
+            "args": [
+                "${fileBasenameNoExtension}"
+            ]
+        }
+        
+    ]
+}

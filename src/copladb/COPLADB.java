@@ -3745,7 +3745,8 @@ public class COPLADB extends Application {
         tfSemanaFinal.setPrefWidth(220);
         
         // etiquetas Estadisticas ventas
-        Label lbcuentaVentas =  new Label("Cuenta Ventas:");
+        Label lbcuentaSemanasVentas =  new Label("Sem. de Ventas:");
+        Label lbCuentaVentas =  new Label("Total Ventas:");
         Label lbsumaPrecios =  new Label("Suma Precios:");
         Label lbSumaEnganches =  new Label("Suma Enganches:");
         Label lbMinimo = new Label("Minimo :");
@@ -3765,7 +3766,7 @@ public class COPLADB extends Application {
         Button btnBuscar = new Button ("Buscar");
         btnBuscar.setOnAction((event) -> {
             
-           //Calculo General de las ventas 
+           //Calculo General de los Cobros 
             lstWhere.clear();
             lstWhere.add("Nombre is not null");
             cobrador cbrDTO = cobraDAO.consultarCobradores(lstWhere).get(0);            
@@ -3823,8 +3824,8 @@ public class COPLADB extends Application {
             tvTablaSemanas.setItems(lstTarjetasPorSemanaConEnganches);
             
             //Calculo Estadisticas de ventas
-            String strTotalVentas = "Cuenta Ventas:"+String.valueOf(lstTarjetasPorSemanaConEnganches.size());
-            lbcuentaVentas.setText(strTotalVentas);
+            String strTotalVentas = "Sem. de Ventas:"+String.valueOf(lstTarjetasPorSemanaConEnganches.size());
+            lbcuentaSemanasVentas.setText(strTotalVentas);
             float sumaMontosEnganches =0;
             float sumaMontosPrecios =0;
             int cuentaNumVentas = 0;
@@ -3838,6 +3839,7 @@ public class COPLADB extends Application {
                if (minimoNumVentas>t.getCuentaEngaches()) minimoNumVentas = t.getCuentaEngaches();
             }
             float promedioVentas = cuentaNumVentas/lstTarjetasPorSemanaConEnganches.size();
+            lbCuentaVentas.setText("Total Ventas: "+String.valueOf(cuentaNumVentas));
             lbPromedio.setText("Promedio Ventas: "+String.valueOf(promedioVentas));
             lbMaximo.setText("Maximo: "+String.valueOf(maximoNumVentas));
             lbMinimo.setText("Minimo :"+String.valueOf(minimoNumVentas));
@@ -3984,27 +3986,28 @@ public class COPLADB extends Application {
         gpEstadisticas.setPadding(new Insets(5,5,5,5));
         gpEstadisticas.setVgap(10);
         gpEstadisticas.setHgap(10);
-        gpEstadisticas.add(lbSumaEnganches,0,0);
-        gpEstadisticas.add(lbsumaPrecios,0,1);
-        gpEstadisticas.add(lbcuentaVentas,0,2);
-        gpEstadisticas.add(lbMaximo,0,3);
-        gpEstadisticas.add(lbMinimo,0,4);
-        gpEstadisticas.add(lbPromedio,0,5);
+        gpEstadisticas.add(lbcuentaSemanasVentas,0,0);
+        gpEstadisticas.add(lbCuentaVentas,0,1);
+        gpEstadisticas.add(lbSumaEnganches,0,2);
+        gpEstadisticas.add(lbsumaPrecios,0,3);
+        gpEstadisticas.add(lbMaximo,0,4);
+        gpEstadisticas.add(lbMinimo,0,5);
+        gpEstadisticas.add(lbPromedio,0,6);
         
         VBox vbVendedores = new VBox();
-        vbVendedores.getChildren().addAll(gpGraficadorVendedor);
+        vbVendedores.getChildren().addAll(gpGraficadorVendedor, gpTablaSemanas, gpEstadisticas);
         
         VBox vbCobradores = new VBox();
-        vbCobradores.getChildren().addAll(gpGraficadorCobrador);
+        vbCobradores.getChildren().addAll(gpGraficadorCobrador, gpTablaSemanasCob, gpEstadisticasCob);
         
         HBox hbGraficas = new HBox();
         hbGraficas.setPadding( new Insets(5,5,5,5));
         hbGraficas.getChildren().addAll(vbVendedores, vbCobradores);
 
-        HBox hbDatos = new HBox();
-        hbDatos.getChildren().setAll(gpTablaSemanas,gpEstadisticas, gpTablaSemanasCob, gpEstadisticasCob);
+        //HBox hbDatos = new HBox();
+        //hbDatos.getChildren().setAll(gpTablaSemanas,gpEstadisticas, gpTablaSemanasCob, gpEstadisticasCob);
         
-        vbPpal.getChildren().setAll(lbTitulo,gpSeleccionVendedor, hbGraficas, hbDatos);
+        vbPpal.getChildren().setAll(lbTitulo,gpSeleccionVendedor, hbGraficas);
         return vbPpal;
     }
     

@@ -121,3 +121,21 @@ and open the template in the editor.
     -fx-padding: 20 10 10 10;
     -fx-spacing: 15
 }
+
+.gridPane-estadisticas{
+    -fx-background-color: #2E8B57;
+    -fx-background-radius: 25px;
+    -fx-border-color: #2e8b57;
+    -fx-border-width: 1px;
+    -fx-border-radius: 25px;
+    -fx-padding: 20 10 10 10;
+    -fx-spacing: 15
+    
+}
+
+#textoEstadisticas{
+    -fx-text-fill: #000000;
+    -fx-font-size: 11px;
+    -fx-font-family: "Arial";
+    -fx-font-weight: bold;
+}

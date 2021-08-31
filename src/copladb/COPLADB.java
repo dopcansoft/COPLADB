@@ -3702,7 +3702,7 @@ public class COPLADB extends Application {
         Label lbTitulo = new Label("ESTADO COBRANZA");
         lbTitulo.getStyleClass().add("titulo-vista");
         lbTitulo.setAlignment(Pos.CENTER);
-        lbTitulo.setPadding(new Insets(25, 25, 25, 25));
+        lbTitulo.setPadding(new Insets(5, 5, 5, 5));
         
         //Componentes del grafico Cobradores
         ObservableList<XYChart.Data> aListCobradores = FXCollections.observableArrayList(
@@ -3746,19 +3746,31 @@ public class COPLADB extends Application {
         
         // etiquetas Estadisticas ventas
         Label lbcuentaSemanasVentas =  new Label("Sem. de Ventas:");
+        lbcuentaSemanasVentas.setId("textoEstadisticas");
         Label lbCuentaVentas =  new Label("Total Ventas:");
+        lbCuentaVentas.setId("textoEstadisticas");
         Label lbsumaPrecios =  new Label("Suma Precios:");
+        lbsumaPrecios.setId("textoEstadisticas");
         Label lbSumaEnganches =  new Label("Suma Enganches:");
+        lbSumaEnganches.setId("textoEstadisticas");
         Label lbMinimo = new Label("Minimo :");
+        lbMinimo.setId("textoEstadisticas");
         Label lbMaximo = new Label("Maximo: ");
+        lbMaximo.setId("textoEstadisticas");
         Label lbPromedio = new Label("Promedio Ventas: ");
+        lbPromedio.setId("textoEstadisticas");
         
         //etiquetas Estadisticas cobros
         Label lbCuentaCobros =  new Label("Cuenta Cobros:");
+        lbCuentaCobros.setId("textoEstadisticas");
         Label lbSumaCobros =  new Label("Suma Cobros:");
+        lbSumaCobros.setId("textoEstadisticas");
         Label lbMinimoCobros = new Label("Minimo :");
+        lbMinimoCobros.setId("textoEstadisticas");
         Label lbMaximoCobros = new Label("Maximo: ");
+        lbMaximoCobros.setId("textoEstadisticas");
         Label lbPromedioCobros = new Label("Promedio Cobros: "); 
+        lbPromedioCobros.setId("textoEstadisticas");
         
         TableView tvTablaSemanas = new TableView();
         TableView tvTablaSemanasCob = new TableView();
@@ -3872,24 +3884,25 @@ public class COPLADB extends Application {
         Axis yAxisCob = new NumberAxis();// ("Cantidad", 0, 50, 5);
         
         BarChart bcGraficaCobrador = new BarChart(xAxCob, yAxisCob, seriesListCobradores);
-        bcGraficaCobrador.setMinSize(700,250);
-        bcGraficaCobrador.setMaxSize(700,250);
-        bcGraficaCobrador.setPrefSize(700,250);
+        bcGraficaCobrador.setMinSize(500,180);
+        bcGraficaCobrador.setMaxSize(500,180);
+        bcGraficaCobrador.setPrefSize(500,180);
         
         // Grafica para evaluar el desempeño del vendedor por semana
         Label lbGraficaVendedores = new Label("Grafica Vendedores: ");
         ObservableList<XYChart.Series> seriesList = FXCollections.observableArrayList();
         
  
+        
         seriesList.add(new XYChart.Series("Cant. Semanas", aList));
 
         CategoryAxis xAx = new CategoryAxis(categorias);
         Axis yAxis = new NumberAxis();// ("Cantidad", 0, 50, 5);
         
         BarChart bcGraficaVendedor = new BarChart(xAx, yAxis, seriesList);
-        bcGraficaVendedor.setMinSize(700,250);
-        bcGraficaVendedor.setMaxSize(700,250);
-        bcGraficaVendedor.setPrefSize(700,250);
+        bcGraficaVendedor.setMinSize(500,180);
+        bcGraficaVendedor.setMaxSize(500,180);
+        bcGraficaVendedor.setPrefSize(500,180);
        
         //Tabla Semanas Cobradores
         TableColumn CobSemanaColum = new TableColumn("Semana");
@@ -3905,7 +3918,7 @@ public class COPLADB extends Application {
         MontoCobradoColum.setCellValueFactory(new PropertyValueFactory<>("sumaMontos"));
         
         
-        tvTablaSemanasCob.setPrefSize(490, 200);
+        tvTablaSemanasCob.setPrefSize(490, 180);
         tvTablaSemanasCob.getColumns().addAll(CobSemanaColum, CobCantidadColum, MontoCobradoColum);
         
         //Tabla Semanas Vendedores       
@@ -3925,11 +3938,8 @@ public class COPLADB extends Application {
         SumaEnganchesColum.setPrefWidth(110);
         SumaEnganchesColum.setCellValueFactory(new PropertyValueFactory<>("sumaEnganches"));
         
-        
-        tvTablaSemanas.setPrefSize(380, 200);
+        tvTablaSemanas.setPrefSize(380, 180);
         tvTablaSemanas.getColumns().addAll(SemanaColum, CantidadEnganchesColum, CantidadSumaPreciosColum, SumaEnganchesColum);
-        
-        
         
         // Layouts
         GridPane gpSeleccionVendedor = new GridPane();
@@ -3966,6 +3976,7 @@ public class COPLADB extends Application {
         gpTablaSemanasCob.add(tvTablaSemanasCob, 0, 0);
         
         GridPane gpEstadisticasCob = new GridPane();
+        gpEstadisticasCob.getStyleClass().add("gridPane-estadisticas");
         gpEstadisticasCob.setPadding(new Insets(5,5,5,5));
         gpEstadisticasCob.setVgap(10);
         gpEstadisticasCob.setHgap(10);
@@ -3983,6 +3994,8 @@ public class COPLADB extends Application {
         gpTablaSemanas.add(tvTablaSemanas, 0, 0);
         
         GridPane gpEstadisticas = new GridPane();
+        //gpEstadisticas.setStyle("-fx-background-color: yellow; ");
+        gpEstadisticas.getStyleClass().add("gridPane-estadisticas");
         gpEstadisticas.setPadding(new Insets(5,5,5,5));
         gpEstadisticas.setVgap(10);
         gpEstadisticas.setHgap(10);
@@ -3995,9 +4008,11 @@ public class COPLADB extends Application {
         gpEstadisticas.add(lbPromedio,0,6);
         
         VBox vbVendedores = new VBox();
+        vbVendedores.setPadding(new Insets(5,5,5,5));
         vbVendedores.getChildren().addAll(gpGraficadorVendedor, gpTablaSemanas, gpEstadisticas);
         
         VBox vbCobradores = new VBox();
+        vbCobradores.setPadding(new Insets(5,5,5,5));
         vbCobradores.getChildren().addAll(gpGraficadorCobrador, gpTablaSemanasCob, gpEstadisticasCob);
         
         HBox hbGraficas = new HBox();

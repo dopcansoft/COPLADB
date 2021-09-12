@@ -67,12 +67,23 @@ import copladb.DTO.usuario;
 import copladb.DAO.usuarioDAO;
 import copladb.DTO.accesos;
 import copladb.DAO.accesosDAO;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import static javafx.collections.FXCollections.observableList;
+import javafx.embed.swing.SwingNode;
 import javafx.geometry.HPos;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.BarChart;
@@ -89,9 +100,20 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
+import javax.swing.JPanel;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.swing.JRViewer;
 /**
  *
  * @author i7
@@ -1811,7 +1833,7 @@ public class COPLADB extends Application {
         lstWhere.clear();
         lstWhere.add("idTarjeta is not null");
         tvTarjetas.setItems(FXCollections.observableArrayList(tarDAO.consultarTarjetasCliente(lstWhere)));
- 
+        
         //Datos Tarjeta
         Label lbDatosTarjeta = new Label("Datos de Tarjeta");
         Label lbFolio = new Label("Folio");
@@ -1880,6 +1902,9 @@ public class COPLADB extends Application {
         TextField tfComision = new TextField();
         Label lbPorcentajeComision = new Label ("% Comision: ");
         TextField tfPorcentajeComision = new TextField();
+        
+        Button btnRepTarjeta = new Button("Generar reporte Tarjeta");
+        Button btnRepGralTarjeta = new Button("Generar Reporte General de Tarjetas ");
     
         Button btnCalulaComision = new Button("Calcular Comision");
         btnCalulaComision.setOnAction((event) -> {
@@ -2466,6 +2491,137 @@ public class COPLADB extends Application {
             
         });        
         
+        /// Metodo para generar el roporte general de tarjetas
+
+        btnRepGralTarjeta.setOnAction((event) -> {
+           int cantidadTarjetas = 0; 
+           List<tarjeta> lstTarjetasTmp = tvTarjetas.getItems();
+           for (tarjeta t: lstTarjetasTmp){
+             try{              
+                File file;
+                JasperReport jasperReport;
+                file = new File("Reportes/Formatos/reporteGeneralTarjetas.jasper");
+                List<pagosRealizados> lstPagosRealizado= new ArrayList<>();
+                LocalDateTime ld = LocalDateTime.now();
+                String fechaFile = String.valueOf(ld.getDayOfMonth())+String.valueOf(ld.getMonth())+String.valueOf(ld.getYear())+String.valueOf(ld.getHour())+String.valueOf(ld.getMinute())+String.valueOf(ld.getSecond())+String.valueOf(ld.getNano());
+                //String outputFile = userHomeDirectory + File.separatorChar + "ReporteInventario"+fechaFile+".pdf";
+                String outputFile = "Reportes/Tarjetas/General" + File.separatorChar + "ReporteGralTarjeta"+fechaFile+".pdf";
+                //JRBeanCollectionDataSource tarjetasJRBean = new JRBeanCollectionDataSource(tvProductos.getItems().subList(0, tvProductos.getItems().size()-1));
+                jasperReport = (JasperReport) JRLoader.loadObject(file);
+                lstWhere.clear();
+                lstWhere.add("idTarjeta = "+ t.getIdTarjeta());
+                lstPagosRealizado.addAll(pagReaDAO.consultarPagosRealizados(lstWhere));
+                //JRBeanCollectionDataSource pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(pagReaDAO.consultarPagosRealizados(lstWhere));
+                JRBeanCollectionDataSource pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(tvTarjetas.getItems());
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("pagosDeTarjetaDataSource", pagosDeTarjetaJRBean);
+                parameters.put("folioTarjeta", t.getFolio());
+                parameters.put("fechaReg", t.getFecha());
+                parameters.put("strSaldo", t.getSaldo());
+                parameters.put("strPrecio", t.getPrecio());
+                parameters.put("strEnganche", t.getEnganche());
+                parameters.put("strPagos", t.getPagos());
+                parameters.put("strTiposPago", t.getTipoPago());
+                parameters.put("strTipoPrecio", t.getTipoPrecio());
+                parameters.put("strCliente", t.getNomCliente());
+               /* Generando el PDF */
+                //C:\Users\dopcan\Documents\NetBeansProjects\ClasesConsultorio\src\gestionconsultorio
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+                /* outputStream to create PDF */
+                OutputStream outputStream = new FileOutputStream(new File(outputFile));
+                /* Write content to PDF file */
+                JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+                outputStream.close();
+                cantidadTarjetas += 1;
+               } catch (JRException | FileNotFoundException error) {
+                       //ex.printStackTrace();
+                        System.out.println("Error: "+ error.getMessage());
+               } catch (IOException ex) {
+                        System.out.println("Error: "+ ex.getMessage());
+               }             
+            }
+            Alert resp = new Alert(Alert.AlertType.INFORMATION);
+            resp.setTitle("Informacion");
+            resp.setContentText(String.valueOf(cantidadTarjetas)+" Tarjetas generadas en Carpeta Reportes/Tarjetas/General ");
+            resp.showAndWait();  
+    
+        });
+        
+        /// Metodo para generar la tarjeta
+        btnRepTarjeta.setOnAction((event) -> {
+          try{
+            
+           /* User home directory location */
+           // String userHomeDirectory = System.getProperty("user.home");
+            /* Output file location */
+            
+            File file;
+            JasperReport jasperReport;
+            file = new File("Reportes/Formatos/reporteTarjetas.jasper");
+            jasperReport = (JasperReport) JRLoader.loadObject(file);
+            LocalDateTime ld = LocalDateTime.now();
+            String fechaFile = String.valueOf(ld.getDayOfMonth())+String.valueOf(ld.getMonth())+String.valueOf(ld.getYear())+String.valueOf(ld.getHour())+String.valueOf(ld.getMinute())+String.valueOf(ld.getSecond());
+            //String outputFile = userHomeDirectory + File.separatorChar + "ReporteInventario"+fechaFile+".pdf";
+            String outputFile = "Reportes/Tarjetas/" + File.separatorChar + "ReporteTarjeta"+fechaFile+".pdf";
+           //JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(tvProductos.getItems().subList(0, tvProductos.getItems().size()-1));
+           JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(tvPagosRealizado.getItems());
+           System.out.println("Hay "+tvPagosRealizado.getItems().size());
+           ObservableList<pagosRealizados> lstPagosRealizado =  tvPagosRealizado.getItems();
+           for (pagosRealizados p: lstPagosRealizado){
+                System.out.println("Fecha"+p.getFecha());
+                System.out.println("Monto"+p.getMonto());
+                System.out.println("Tipo"+p.getTipo());
+           }
+           Map<String, Object> parameters = new HashMap<>();
+           parameters.put("ItemsDataSource", itemsJRBean);
+           String folio = tfFolio.getText();
+           parameters.put("folioTarjeta", folio);
+           String fechaReg = dpFecha.getValue().toString();
+           parameters.put("fechaReg", fechaReg);
+           String strSaldo = tfSaldo.getText();
+           parameters.put("strSaldo", strSaldo);
+           String strPrecio = tfPrecio.getText();
+           parameters.put("strPrecio", strPrecio);
+           String strEnganche = tfEnganche.getText();
+           parameters.put("strEnganche", strEnganche);
+           String strPagos = tfPagos.getText();
+           parameters.put("strPagos", strPagos);
+           String strTiposPago = cbTipoPago.getValue().toString();
+           parameters.put("strTiposPago", strTiposPago);
+           String strTipoPrecio = cbTipoPrecio.getValue().toString();
+           parameters.put("strTipoPrecio", strTipoPrecio);
+           
+
+           /* Generando el PDF */
+            //C:\Users\dopcan\Documents\NetBeansProjects\ClasesConsultorio\src\gestionconsultorio
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+            JRViewer jrViewer;
+            JPanel jpanel;
+            SwingNode swingNode;
+            jpanel = new JPanel();
+            swingNode = new SwingNode();
+            jrViewer = new JRViewer(jasperPrint);
+            jrViewer.setBounds(0, 0, 1200, 800);
+            jpanel.setLayout(null);
+            jpanel.add(jrViewer);
+            jpanel.setSize(1200, 800);
+            Pane panePreview = new Pane(); 
+            panePreview.setPrefSize(1200, 800);
+            panePreview.getChildren().add(swingNode);
+            swingNode.setContent(jpanel);
+
+            StackPane rootSelectClientes = new StackPane();
+            rootSelectClientes.getChildren().addAll(swingNode);
+       
+            Scene scene = new Scene(rootSelectClientes,1200,800);
+            Stage stgPpal = new Stage();
+            stgPpal.setScene(scene);
+            stgPpal.initModality(Modality.WINDOW_MODAL);
+            stgPpal.show();  
+        } catch (JRException ex) {
+            ex.printStackTrace();
+        }             
+        });
         
         GridPane gpPagosProyectados = new GridPane();
         gpPagosProyectados.setVgap(10);
@@ -2665,6 +2821,8 @@ public class COPLADB extends Application {
         gpDatosTarjeta.add(lbVendedor, 2, 6);
         gpDatosTarjeta.add(cbVendedor, 3, 6);
         gpDatosTarjeta.add(btnActualizarTarjeta, 3, 7);
+        gpDatosTarjeta.add(btnRepTarjeta, 3, 8);
+        gpDatosTarjeta.add(btnRepGralTarjeta, 3, 9);
         
         
         VBox vbRigth = new VBox();

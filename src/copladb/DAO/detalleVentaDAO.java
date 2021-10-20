@@ -33,7 +33,7 @@ public class detalleVentaDAO {
         }
         Conexion conecta = new Conexion("cobranzaDB.db");
         //codigo_cliente, nombre, razon_social, domicilio_fiscal, telefono, rfc, email
-        String sql = "SELECT id_detalle_venta, descprod, cantidad, precio_venta, idTarjeta, codigo_prod from detalle_venta "+Filtro.toString();
+        String sql = "SELECT id_detalle_venta, descprod, cantidad, precio_venta, idTarjeta, codigo_prod from detalle_venta where "+Filtro.toString();
         System.out.println(sql);
         try (
             Connection con = conecta.conectaDB();

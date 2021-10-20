@@ -15,6 +15,7 @@ public class tarjeta {
     private String Folio;
     private Integer idCliente;
     private String nomCliente;
+    private String dirCliente;
     private float Precio;
     private float Enganche;
     private Integer idVendedor;
@@ -61,6 +62,14 @@ public class tarjeta {
 
     public void setNomCliente(String nomCliente) {
         this.nomCliente = nomCliente;
+    }
+
+    public String getDirCliente() {
+        return dirCliente;
+    }
+
+    public void setDirCliente(String dirCliente) {
+        this.dirCliente = dirCliente;
     }
 
     public float getPrecio() {

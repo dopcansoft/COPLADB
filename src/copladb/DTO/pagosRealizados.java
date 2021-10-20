@@ -13,10 +13,11 @@ public class pagosRealizados {
     
     private int idPagoRealizado;
     private int numPago;
-    private String Fecha;
-    private float Monto;
-    private String Tipo;
+    private String fecha;
+    private float monto;
+    private String tipo;
     private int idTarjeta;
+    private float saldo;
 
     public int getIdPagoRealizado() {
         return idPagoRealizado;
@@ -34,30 +35,28 @@ public class pagosRealizados {
         this.numPago = numPago;
     }
 
-    
-    
     public String getFecha() {
-        return Fecha;
+        return fecha;
     }
 
-    public void setFecha(String Fecha) {
-        this.Fecha = Fecha;
+    public void setFecha(String fecha) {
+        this.fecha = fecha;
     }
 
     public float getMonto() {
-        return Monto;
+        return monto;
     }
 
-    public void setMonto(float Monto) {
-        this.Monto = Monto;
+    public void setMonto(float monto) {
+        this.monto = monto;
     }
 
     public String getTipo() {
-        return Tipo;
+        return tipo;
     }
 
-    public void setTipo(String Tipo) {
-        this.Tipo = Tipo;
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
     }
 
     public int getIdTarjeta() {
@@ -67,7 +66,15 @@ public class pagosRealizados {
     public void setIdTarjeta(int idTarjeta) {
         this.idTarjeta = idTarjeta;
     }
+
+    public float getSaldo() {
+        return saldo;
+    }
+
+    public void setSaldo(float saldo) {
+        this.saldo = saldo;
+    }
     
     
-    
+   
 }

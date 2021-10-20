@@ -152,9 +152,10 @@ public class COPLADB extends Application {
     List<tarjeta> lstTarjetas = new ArrayList<>();
     List<tarjetaAsignadas> lstTarjetasAsignadas = new ArrayList<>();
     List<inventario> lstInventario = new ArrayList<>();
-    List<detalle_venta> lstDetVenta= new ArrayList<>();
+    List<detalle_venta> lstDetVenta = new ArrayList<>();
     ObservableList<pagosProyectados> lstobPagProyectados = FXCollections.observableArrayList();
     ObservableList<pagosRealizados> lstobPagRealizados = FXCollections.observableArrayList();
+    ObservableList<detalle_venta> lstObDetalleVenta = FXCollections.observableArrayList();
     ObservableList<tarjetasAsigPorSemanaConPagosDTO> lstTarjetasAsigPorSemanaConPagos = FXCollections.observableArrayList();
     ObservableList<tarjetaPorSemana> lstTarjetasPorSemanaConEnganches = FXCollections.observableArrayList();
     List<cliente> lstCliente = new ArrayList<>();
@@ -1425,7 +1426,8 @@ public class COPLADB extends Application {
                 
                 if(!lstobPagRealizados.isEmpty()){
                     for (pagosRealizados pagR: lstobPagRealizados){
-                        pagReaDAO.insertarPagoRealizado(pagR.getFecha(), pagR.getMonto(), pagR.getTipo(), idRegTarjeta);
+                        float saldo =  Float.parseFloat(tfPrecio.getText()) -Float.parseFloat(tfEnganche.getText());
+                        pagReaDAO.insertarPagoRealizado(pagR.getFecha(), pagR.getMonto(), pagR.getTipo(), idRegTarjeta, saldo);
                     }
                 }
                 
@@ -2216,10 +2218,14 @@ public class COPLADB extends Application {
         Label lbDescripcionProducto = new Label("Descripcion:");
         Label lbCantidad = new Label("Cantidad: ");
         Label lbCostoUnitario = new Label("Costo Unitario: ");
-        Label lbCostoTotal = new Label("Gran Total: $ 0.00");
-        lbCostoTotal.getStyleClass().add("Gran-Total");
-        lbCostoTotal.setAlignment(Pos.TOP_RIGHT);
-        lbCostoTotal.setPrefWidth(150);
+        Label lbTotalCostoProductos = new Label("Costo Total: ");
+        
+        Button btnAgregarProducto= new Button("Agregar");
+        btnAgregarCliente.setId("btnIconoAddProducto");
+                
+        Button btnRemoverProducto= new Button("Remover");
+        btnAgregarCliente.setId("btnIconoRemoveProducto");
+    
         
         ToggleGroup tgRadioPrecios = new ToggleGroup();
         RadioButton rbPrecioContado = new RadioButton("Precio Contado");
@@ -2239,9 +2245,18 @@ public class COPLADB extends Application {
         TextField tfContado = new TextField();
         TextField tfCrediContado = new TextField();
         TextField tfCredito = new TextField();
+        TextField tfTotalCostoProducto = new TextField();
+        
+        tfCantidadProducto.setOnKeyPressed((event) -> {
+            if (event.getCode() == KeyCode.ENTER){
+                float cantidad = Float.parseFloat(tfCantidadProducto.getText());
+                float total = cantidad * Float.parseFloat(tfCostoUnitarioProducto.getText());
+                tfTotalCostoProducto.setText(String.valueOf(total));            
+            }
+        });
         
         TableView tvProductos = new TableView();
-        tvProductos.setPrefSize(500, 300);
+        tvProductos.setPrefSize(400, 300);
         
         TableColumn<inventario, String> idProductoColumna = new TableColumn<>("idProducto");
         idProductoColumna.setMinWidth(60);
@@ -2295,7 +2310,60 @@ public class COPLADB extends Application {
             if(rbPrecioContado.isSelected()){
                 tfCostoUnitarioProducto.setText(tfContado.getText());
             }
-        });
+        });       
+        
+        //Tabla Detalle de Venta.
+        
+        TableView tvDetalleVenta = new TableView();
+        tvDetalleVenta.setPrefSize(460, 100); 
+        tvDetalleVenta.setMaxSize(460, 100); 
+        
+        TableColumn<detalle_venta, Integer> detCodigoProductoColumna = new TableColumn<>("Codigo Producto");
+        detCodigoProductoColumna.setMinWidth(120);
+        detCodigoProductoColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_prod")); 
+
+        TableColumn<detalle_venta, String> detDescProdColumna = new TableColumn<>("Descripcion Producto");
+        detDescProdColumna.setMinWidth(180);
+        detDescProdColumna.setCellValueFactory(new PropertyValueFactory<>("descprod"));          
+
+        TableColumn<detalle_venta, Integer> detCantidadColumna = new TableColumn<>("Cantidad");
+        detCantidadColumna.setMinWidth(60);
+        detCantidadColumna.setCellValueFactory(new PropertyValueFactory<>("cantidad"));          
+
+        TableColumn<detalle_venta, Float> detPrecioVentaColumna = new TableColumn<>("Precio Venta");
+        detPrecioVentaColumna.setMinWidth(80);
+        detPrecioVentaColumna.setCellValueFactory(new PropertyValueFactory<>("precio_venta"));                 
+
+        tvDetalleVenta.getColumns().addAll(detCodigoProductoColumna, detDescProdColumna, detCantidadColumna, detPrecioVentaColumna );
+     
+        btnAgregarProducto.setOnAction((event) -> {
+            detVentaDTO = new detalle_venta();
+            detVentaDTO.setCodigo_prod(tfCodigoProducto.getText());
+            detVentaDTO.setDescprod(tfDescripcionProducto.getText());
+            int cant = Integer.parseInt(tfCantidadProducto.getText());
+            detVentaDTO.setCantidad(Integer.parseInt(tfCantidadProducto.getText()));
+            float precioVenta = Float.parseFloat(tfCostoUnitarioProducto.getText());
+            detVentaDTO.setPrecio_venta(Float.parseFloat(tfCostoUnitarioProducto.getText()));
+            detVentaDTO.setSubTotal(cant*precioVenta);
+            tvDetalleVenta.getItems().add(detVentaDTO);
+            
+            detVentaDAO.insertarDetalleVenta( detVentaDTO.getDescprod(), detVentaDTO.getCantidad(), detVentaDTO.getPrecio_venta(), 
+                    tarDTO.getIdTarjeta(), detVentaDTO.getCodigo_prod());
+            
+            int existencia = invDTO.getExistencia();
+            existencia = existencia - cant;
+            invDAO.modificarExistenciaProducto(tfCodigoProducto.getText(), existencia);
+            
+            // Calculo Gran Total de la venta
+//            if (GranTotal>0) GranTotal = 0;
+//            ObservableList<detalle_venta> lstObDetVentTemp = tvProductosSelccionados.getItems();
+//            for (detalle_venta d :lstObDetVentTemp){
+//               GranTotal = GranTotal + d.getSubTotal();
+//            }
+//            tfPrecio.setText(String.valueOf(GranTotal));
+//            lbCostoTotal.setText("Gran Total: $ "+String.valueOf(GranTotal));
+            
+        });         
         
         rbPrecioContado.setOnMouseClicked((event) -> {
             tfCostoUnitarioProducto.setText(String.valueOf(tfContado.getText()));
@@ -2428,15 +2496,14 @@ public class COPLADB extends Application {
         btnAgregarPagoRealizado.setOnMouseClicked((event) -> {
 
             if (dpFechaPagoR.getValue()!=null && tfMontoR.getText()!= null && cbTipoR.getValue()!= null){
-                pagReaDAO.insertarPagoRealizado(dpFechaPagoR.getValue().toString(), Float.parseFloat(tfMontoR.getText()), cbTipoR.getValue().toString(),tarDTO.getIdTarjeta());
-     
                 float saldoTemp = tarDTO.getSaldo();
-                if(cbTipoR.getValue().toString()=="Abono"){
-                    saldoTemp = saldoTemp - Float.parseFloat(tfMontoR.getText());
+                saldoTemp = saldoTemp - Float.parseFloat(tfMontoR.getText());
+                pagReaDAO.insertarPagoRealizado(dpFechaPagoR.getValue().toString(), Float.parseFloat(tfMontoR.getText()), cbTipoR.getValue().toString(),tarDTO.getIdTarjeta(), saldoTemp);
+     
+                if(cbTipoR.getValue().toString().compareTo("Abono")==0){
                     tfSaldo.setText(String.valueOf(saldoTemp));
                     tarDTO.setSaldo(saldoTemp);
                     tarDAO.modificarSaldo(tarDTO.getIdTarjeta(), tarDTO.getSaldo());
-                    
                 }
                 lstWhere.clear();
                 lstWhere.add("idTarjeta = "+ tarDTO.getIdTarjeta());
@@ -2491,7 +2558,7 @@ public class COPLADB extends Application {
             
         });        
         
-        /// Metodo para generar el roporte general de tarjetas
+        /// Metodo para generar el reporte general de tarjetas
 
         btnRepGralTarjeta.setOnAction((event) -> {
            int cantidadTarjetas = 0; 
@@ -2505,14 +2572,17 @@ public class COPLADB extends Application {
                 LocalDateTime ld = LocalDateTime.now();
                 String fechaFile = String.valueOf(ld.getDayOfMonth())+String.valueOf(ld.getMonth())+String.valueOf(ld.getYear())+String.valueOf(ld.getHour())+String.valueOf(ld.getMinute())+String.valueOf(ld.getSecond())+String.valueOf(ld.getNano());
                 //String outputFile = userHomeDirectory + File.separatorChar + "ReporteInventario"+fechaFile+".pdf";
-                String outputFile = "Reportes/Tarjetas/General" + File.separatorChar + "ReporteGralTarjeta"+fechaFile+".pdf";
+                String outputFile = "Reportes/Tarjetas/General" + File.separatorChar + "ReporteGralTarjeta"+t.getFolio()+fechaFile+".pdf";
                 //JRBeanCollectionDataSource tarjetasJRBean = new JRBeanCollectionDataSource(tvProductos.getItems().subList(0, tvProductos.getItems().size()-1));
                 jasperReport = (JasperReport) JRLoader.loadObject(file);
                 lstWhere.clear();
                 lstWhere.add("idTarjeta = "+ t.getIdTarjeta());
                 lstPagosRealizado.addAll(pagReaDAO.consultarPagosRealizados(lstWhere));
-                //JRBeanCollectionDataSource pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(pagReaDAO.consultarPagosRealizados(lstWhere));
-                JRBeanCollectionDataSource pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(tvTarjetas.getItems());
+                JRBeanCollectionDataSource pagosDeTarjetaJRBean = null;
+                if(!lstPagosRealizado.isEmpty()){
+                    pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(lstPagosRealizado);
+                }
+                //JRBeanCollectionDataSource pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(tvTarjetas.getItems());
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("pagosDeTarjetaDataSource", pagosDeTarjetaJRBean);
                 parameters.put("folioTarjeta", t.getFolio());
@@ -2524,6 +2594,8 @@ public class COPLADB extends Application {
                 parameters.put("strTiposPago", t.getTipoPago());
                 parameters.put("strTipoPrecio", t.getTipoPrecio());
                 parameters.put("strCliente", t.getNomCliente());
+                parameters.put("strVendedor", t.getNomVendedor());
+                parameters.put("strDirCliente", t.getDirCliente());
                /* Generando el PDF */
                 //C:\Users\dopcan\Documents\NetBeansProjects\ClasesConsultorio\src\gestionconsultorio
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
@@ -2562,11 +2634,12 @@ public class COPLADB extends Application {
             LocalDateTime ld = LocalDateTime.now();
             String fechaFile = String.valueOf(ld.getDayOfMonth())+String.valueOf(ld.getMonth())+String.valueOf(ld.getYear())+String.valueOf(ld.getHour())+String.valueOf(ld.getMinute())+String.valueOf(ld.getSecond());
             //String outputFile = userHomeDirectory + File.separatorChar + "ReporteInventario"+fechaFile+".pdf";
-            String outputFile = "Reportes/Tarjetas/" + File.separatorChar + "ReporteTarjeta"+fechaFile+".pdf";
+            String outputFile = "Reportes/Tarjetas/" + File.separatorChar + "ReporteTarjeta"+tfFolio.getText()+fechaFile+".pdf";
            //JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(tvProductos.getItems().subList(0, tvProductos.getItems().size()-1));
            JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(tvPagosRealizado.getItems());
            System.out.println("Hay "+tvPagosRealizado.getItems().size());
            ObservableList<pagosRealizados> lstPagosRealizado =  tvPagosRealizado.getItems();
+           tarjeta tarjetaSeleccionada = (tarjeta)tvTarjetas.getSelectionModel().getSelectedItem();
            for (pagosRealizados p: lstPagosRealizado){
                 System.out.println("Fecha"+p.getFecha());
                 System.out.println("Monto"+p.getMonto());
@@ -2590,6 +2663,12 @@ public class COPLADB extends Application {
            parameters.put("strTiposPago", strTiposPago);
            String strTipoPrecio = cbTipoPrecio.getValue().toString();
            parameters.put("strTipoPrecio", strTipoPrecio);
+           String strVendedor = cbVendedor.getValue().toString();
+           parameters.put("strVendedor", strVendedor);
+           String strCliente = tarjetaSeleccionada.getNomCliente();
+           parameters.put("strCliente", strCliente);
+           String strDirCliente = tarjetaSeleccionada.getDirCliente();
+           parameters.put("strDirCliente", strDirCliente);
            
 
            /* Generando el PDF */
@@ -2601,19 +2680,19 @@ public class COPLADB extends Application {
             jpanel = new JPanel();
             swingNode = new SwingNode();
             jrViewer = new JRViewer(jasperPrint);
-            jrViewer.setBounds(0, 0, 1200, 800);
+            jrViewer.setBounds(0, 0, 1200, 600);
             jpanel.setLayout(null);
             jpanel.add(jrViewer);
-            jpanel.setSize(1200, 800);
+            jpanel.setSize(1200, 600);
             Pane panePreview = new Pane(); 
-            panePreview.setPrefSize(1200, 800);
+            panePreview.setPrefSize(1200, 600);
             panePreview.getChildren().add(swingNode);
             swingNode.setContent(jpanel);
 
             StackPane rootSelectClientes = new StackPane();
             rootSelectClientes.getChildren().addAll(swingNode);
        
-            Scene scene = new Scene(rootSelectClientes,1200,800);
+            Scene scene = new Scene(rootSelectClientes,1200,600);
             Stage stgPpal = new Stage();
             stgPpal.setScene(scene);
             stgPpal.initModality(Modality.WINDOW_MODAL);
@@ -2664,10 +2743,6 @@ public class COPLADB extends Application {
         vbPagosRealizados.setPadding(new Insets(5,5,5,5));
         vbPagosRealizados.setSpacing(5);
         vbPagosRealizados.getChildren().addAll(gpPagosRealizados, tvPagosRealizado);
-
-        //HBox hbPagos = new HBox(vbPagosProyectados, vbPagosRealizados);
-        //hbPagos.setPadding(new Insets(5,5,5,5));
-        //hbPagos.setSpacing(5);
         
         btnSeleccionar.setOnMouseClicked((event) -> {
             if(rbTodos.isSelected()){
@@ -2691,39 +2766,7 @@ public class COPLADB extends Application {
             }
         });
             
-        TableView tvProductosSelccionados = new TableView();
-        tvProductosSelccionados.setPrefSize(635, 200);
-        tvProductosSelccionados.setMinSize(635, 200);
-        tvProductosSelccionados.setMaxSize(635, 200);
-        
-        //TableColumn<detalle_venta, String> idProdSelecColumna = new TableColumn<>("id detalle venta");
-        //idProdSelecColumna.setMinWidth(60);
-        //idProdSelecColumna.setCellValueFactory(new PropertyValueFactory<>("Id Producto "));        
-        
-        TableColumn<detalle_venta, String> codigoProdSelecColumna = new TableColumn<>("Codigo Producto");
-        codigoProdSelecColumna.setMinWidth(120);
-        codigoProdSelecColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_prod"));
-        
-        TableColumn<detalle_venta, Float> cantidadColumna = new TableColumn<>("Cantidad");
-        cantidadColumna.setMinWidth(80);
-        cantidadColumna.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
-
-        TableColumn<detalle_venta, Float> descProdSelecColumna = new TableColumn<>("Descripcion");
-        descProdSelecColumna.setMinWidth(280);
-        descProdSelecColumna.setCellValueFactory(new PropertyValueFactory<>("descprod"));
-
-        TableColumn<detalle_venta, Float> precProdSelecColumna = new TableColumn<>("Precio Venta");
-        precProdSelecColumna.setMinWidth(60);
-        precProdSelecColumna.setCellValueFactory(new PropertyValueFactory<>("precio_venta"));
-
-        TableColumn<detalle_venta, Float> subTotalColumna = new TableColumn<>("sub-Total");
-        subTotalColumna.setMinWidth(80);
-        subTotalColumna.setCellValueFactory(new PropertyValueFactory<>("subTotal"));
-
-        tvProductosSelccionados.getColumns().setAll(codigoProdSelecColumna, descProdSelecColumna, cantidadColumna, 
-                precProdSelecColumna, subTotalColumna);
-        
-        tvProductosSelccionados.setItems(FXCollections.observableArrayList(lstDetVenta));
+ 
         
         tvTarjetas.setOnMouseClicked((event) -> {
             if (!lstobPagRealizados.isEmpty()){
@@ -2751,6 +2794,13 @@ public class COPLADB extends Application {
             lstWhere.add("idTarjeta = "+ tarDTO.getIdTarjeta());
             lstobPagRealizados.addAll(pagReaDAO.consultarPagosRealizados(lstWhere));
             tvPagosRealizado.setItems(lstobPagRealizados);
+
+            if(!lstObDetalleVenta.isEmpty()) lstObDetalleVenta.clear();
+            lstWhere.clear();
+            lstWhere.add("idTarjeta = "+ tarDTO.getIdTarjeta());
+            lstObDetalleVenta.addAll(detVentaDAO.consultarDetalleVenta(lstWhere));
+             tvDetalleVenta.setItems(lstObDetalleVenta);
+
             lstWhere.clear();
             lstWhere.add("idVendedor ="+tarDTO.getIdVendedor());
             lstVendedor = venDAO.consultarVendedor(lstWhere);
@@ -2859,20 +2909,26 @@ public class COPLADB extends Application {
         vbDatosCliente.getChildren().addAll(gpTipoBusquedaClientes, tvClientes, gpDatosCliente);
 
         GridPane gpDatosProducto = new GridPane();
-        //gpDatosProducto.setPadding(new Insets(5,5,5,5));
-        //gpDatosProducto.setVgap(5);
-        //gpDatosProducto.setHgap(5);
         gpDatosProducto.add(lbDatosProducto, 0, 0);
         gpDatosProducto.add(lbCodigoProducto, 0, 1);
         gpDatosProducto.add(tfCodigoProducto, 1, 1);
         gpDatosProducto.add(lbDescripcionProducto, 0, 2);
         gpDatosProducto.add(tfDescripcionProducto, 1, 2);
-        gpDatosProducto.add(lbCantidad, 0, 3);
-        gpDatosProducto.add(tfCantidadProducto, 1, 3);
+        
+        gpDatosProducto.add(rbPrecioContado, 0, 3);
+        gpDatosProducto.add(rbPrecioCrediContado, 1, 3);
+        gpDatosProducto.add(rbPrecioCredito, 2, 3);
+        //gpDatosProducto.add(tfContado,0,4);
+        //gpDatosProducto.add(tfCrediContado, 1,4);
+        //gpDatosProducto.add(tfCrediContado, 2,4);
         gpDatosProducto.add(lbCostoUnitario, 0, 4);
-        //gpDatosProducto.add(, 1, 4);
-        gpDatosProducto.add(lbCostoTotal, 0, 5);
-        //gpDatosProducto.add(, 1, 5);
+        gpDatosProducto.add(tfCostoUnitarioProducto,1, 4);
+        gpDatosProducto.add(lbCantidad, 0, 5);
+        gpDatosProducto.add(tfCantidadProducto, 1, 5);
+        gpDatosProducto.add(lbTotalCostoProductos, 0, 6);
+        gpDatosProducto.add(tfTotalCostoProducto, 1, 6);
+        gpDatosProducto.add(btnAgregarProducto, 0, 7);
+        gpDatosProducto.add(btnRemoverProducto, 1, 7);
 
         HBox hbProductos = new HBox();
         hbProductos.setSpacing(5);
@@ -2894,7 +2950,7 @@ public class COPLADB extends Application {
 
         VBox vbProductos = new VBox();
         vbProductos.setSpacing(5);
-        vbProductos.getChildren().addAll(gpTipoSeleccion, hbProductos);
+        vbProductos.getChildren().addAll(gpTipoSeleccion, hbProductos, tvDetalleVenta);
         
         TabPane tpPpal = new TabPane();
         tpPpal.setPrefWidth(800);
@@ -5522,7 +5578,6 @@ public class COPLADB extends Application {
         return vbDatosVendedor;
     } 
 
-    
     //Modulos de Cobradores
     private VBox vRegistrarCobrador() {
         Label lbTitulo = new Label("R E G I S T R A R  C O B R A D O R");

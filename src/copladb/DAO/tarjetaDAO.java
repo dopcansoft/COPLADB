@@ -282,6 +282,9 @@ public class tarjetaDAO {
 
     public List<tarjeta> consultarTarjetasCliente( List<String> where){
         List<tarjeta>  lstTarjeta= new ArrayList<>();
+        List<String> lstWhere = new ArrayList<>();
+        List<vendedor> lstVendedor = new ArrayList<>();
+        vendedorDAO vendD = new vendedorDAO();
 
         //StringBuilder sql= null;
         StringBuilder Filtro = new StringBuilder();
@@ -293,7 +296,7 @@ public class tarjetaDAO {
                 }			
         }
         Conexion conecta = new Conexion("cobranzaDB.db");
-        String sql = "select t.idTarjeta, t.Folio, t.idCliente, C.idCliente, C.Nombre as nomCliente, t.Precio, "
+        String sql = "select t.idTarjeta, t.Folio, t.idCliente, C.Direccion, C.Nombre as nomCliente, t.Precio, "
                 + "t.Enganche, t.idVendedor, t.Clasificacion, t.TipoPago, t.Region, t.DiaCobro, t.EnganchePend, t.Saldo, t.Fecha, t.Pagos, t.TipoPrecio "
                 + "from Tarjeta as t left join Clientes as C on t.idCliente = C.idCliente where "+Filtro.toString();
         System.out.println(sql);
@@ -307,10 +310,18 @@ public class tarjetaDAO {
                 tarj.setIdTarjeta(rs.getInt(1));
                 tarj.setFolio(rs.getString(2));
                 tarj.setIdCliente(rs.getInt(3));
+                tarj.setDirCliente(rs.getString(4));
                 tarj.setNomCliente(rs.getString(5));
                 tarj.setPrecio(rs.getFloat(6));
                 tarj.setEnganche(rs.getFloat(7));
                 tarj.setIdVendedor(rs.getInt(8));
+                    lstWhere.clear();
+                    lstWhere.add("idVendedor = "+rs.getInt(8));
+                    lstVendedor = vendD.consultarVendedor(lstWhere);
+                if(!lstVendedor.isEmpty())
+                  tarj.setNomVendedor(lstVendedor.get(0).getNombre());
+                else
+                  tarj.setNomVendedor("No esta Definido!! ");
                 tarj.setClasificacion(rs.getString(9));
                 tarj.setTipoPago(rs.getString(10));
                 tarj.setRegion(rs.getString(11));

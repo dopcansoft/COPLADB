@@ -33,7 +33,7 @@ public class pagosRealizadosDAO {
                 }			
         }
         Conexion conecta = new Conexion("cobranzaDB.db");
-        String sql = "SELECT idPagoRealizado, Fecha, monto, Tipo, idTarjeta from Pagos_realizados where "+Filtro.toString();
+        String sql = "SELECT idPagoRealizado, Fecha, monto, Tipo, idTarjeta, saldo from Pagos_realizados where "+Filtro.toString();
         System.out.println(sql);
         try (
             Connection con = conecta.conectaDB();
@@ -47,6 +47,7 @@ public class pagosRealizadosDAO {
                 pagoRea.setMonto(rs.getFloat(3));
                 pagoRea.setTipo(rs.getString(4));
                 pagoRea.setIdTarjeta(rs.getInt(5));
+                pagoRea.setSaldo(rs.getFloat(6));
                 lstPagosRea.add(pagoRea);
              }
              con.close();
@@ -58,12 +59,12 @@ public class pagosRealizadosDAO {
     }  
 
 
-    public int insertarPagoRealizado(String FechaP, float montoP, String tipoP, int idTarjetaP){
+    public int insertarPagoRealizado(String FechaP, float montoP, String tipoP, int idTarjetaP, float saldo){
         int regs=0;
         StringBuilder sqrString= new StringBuilder();
         Conexion conecta = new Conexion("cobranzaDB.db");    
-        sqrString.append("INSERT INTO Pagos_realizados(Fecha, monto, Tipo, idTarjeta) "
-                + "VALUES (?, ?, ?, ?)");
+        sqrString.append("INSERT INTO Pagos_realizados(Fecha, monto, Tipo, idTarjeta, saldo) "
+                + "VALUES (?, ?, ?, ?, ?)");
         System.out.print(sqrString.toString());
         try{
              Connection con = conecta.conectaDB();
@@ -72,6 +73,7 @@ public class pagosRealizadosDAO {
              pstmt.setFloat(2, montoP);
              pstmt.setString(3, tipoP);
              pstmt.setInt(4, idTarjetaP);
+             pstmt.setFloat(5, saldo);
              regs = pstmt.executeUpdate();
              ResultSet rs = pstmt.getGeneratedKeys();
              if (regs== 1){

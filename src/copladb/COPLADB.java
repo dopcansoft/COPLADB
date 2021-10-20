@@ -2338,6 +2338,7 @@ public class COPLADB extends Application {
      
         btnAgregarProducto.setOnAction((event) -> {
             detVentaDTO = new detalle_venta();
+            detVentaDTO.setIdTarjeta(tarDTO.getIdTarjeta());
             detVentaDTO.setCodigo_prod(tfCodigoProducto.getText());
             detVentaDTO.setDescprod(tfDescripcionProducto.getText());
             int cant = Integer.parseInt(tfCantidadProducto.getText());
@@ -2345,10 +2346,15 @@ public class COPLADB extends Application {
             float precioVenta = Float.parseFloat(tfCostoUnitarioProducto.getText());
             detVentaDTO.setPrecio_venta(Float.parseFloat(tfCostoUnitarioProducto.getText()));
             detVentaDTO.setSubTotal(cant*precioVenta);
-            tvDetalleVenta.getItems().add(detVentaDTO);
+            //tvDetalleVenta.getItems().add(detVentaDTO);
             
-            detVentaDAO.insertarDetalleVenta( detVentaDTO.getDescprod(), detVentaDTO.getCantidad(), detVentaDTO.getPrecio_venta(), 
+            detVentaDAO.insertarDetalleVenta( detVentaDTO.getDescprod(), detVentaDTO.getCantidad(), detVentaDTO.getSubTotal(), 
                     tarDTO.getIdTarjeta(), detVentaDTO.getCodigo_prod());
+            if(!lstObDetalleVenta.isEmpty()) lstObDetalleVenta.clear();
+            lstWhere.clear();
+            lstWhere.add("idTarjeta = "+ tarDTO.getIdTarjeta());
+            lstObDetalleVenta.addAll(detVentaDAO.consultarDetalleVenta(lstWhere));
+             tvDetalleVenta.setItems(lstObDetalleVenta); 
             
             int existencia = invDTO.getExistencia();
             existencia = existencia - cant;
@@ -2363,7 +2369,31 @@ public class COPLADB extends Application {
 //            tfPrecio.setText(String.valueOf(GranTotal));
 //            lbCostoTotal.setText("Gran Total: $ "+String.valueOf(GranTotal));
             
-        });         
+        });   
+        
+        btnRemoverProducto.setOnAction((event) -> {
+            if(tvDetalleVenta.getSelectionModel().getSelectedItem()!= null){
+                detVentaDTO = (detalle_venta) tvDetalleVenta.getSelectionModel().getSelectedItem();
+                System.out.println("Detalle Venta Eliminado -->"+detVentaDTO.getId_detalle_venta());
+                detVentaDAO.eliminarDetalleVenta(detVentaDTO.getId_detalle_venta());
+                Alert resp = new Alert(Alert.AlertType.INFORMATION);
+                resp.setTitle("Informacion");
+                resp.setContentText("Se Elimino Detalle de venta");
+                resp.showAndWait();
+                if(!lstObDetalleVenta.isEmpty()) lstObDetalleVenta.clear();
+                lstWhere.clear();
+                lstWhere.add("idTarjeta = "+ tarDTO.getIdTarjeta());
+                lstObDetalleVenta.addAll(detVentaDAO.consultarDetalleVenta(lstWhere));
+                 tvDetalleVenta.setItems(lstObDetalleVenta);                
+            }
+            else            {
+                Alert resp = new Alert(Alert.AlertType.ERROR);
+                resp.setTitle("Informacion");
+                resp.setContentText(" Debes Seleccionar un producto de la tabla detalle de venta!!");
+                resp.showAndWait();  
+            }
+            
+        });
         
         rbPrecioContado.setOnMouseClicked((event) -> {
             tfCostoUnitarioProducto.setText(String.valueOf(tfContado.getText()));

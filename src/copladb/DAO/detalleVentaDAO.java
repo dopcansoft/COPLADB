@@ -114,8 +114,8 @@ public class detalleVentaDAO {
             }
         }
 
-    public void eliminarCliente(int id) {
-        String sql = "DELETE FROM detalle_venta WHERE idCliente = ?";
+    public void eliminarDetalleVenta(int id) {
+        String sql = "DELETE FROM detalle_venta WHERE id_detalle_venta = ?";
         Conexion conecta = new Conexion("cobranzaDB.db");
         try (Connection con = conecta.conectaDB();
             PreparedStatement pstmt = con.prepareStatement(sql)) {

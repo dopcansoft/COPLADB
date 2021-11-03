@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="347d64a2-6110-4a2c-8172-2d81cc427d20">
 	<property name="ireport.zoom" value="1.4641000000000013"/>
-	<property name="ireport.x" value="82"/>
-	<property name="ireport.y" value="18"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="478"/>
 	<style name="table">
 		<box>
 			<pen lineWidth="1.0" lineColor="#000000"/>
@@ -203,11 +203,36 @@
 			<pen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
+	<style name="table 10">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 10_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 10_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 10_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
 	<subDataset name="pagosDataSource" uuid="4c2a44d0-816a-4b03-bf1e-4a4037f98b76">
 		<field name="fecha" class="java.lang.String"/>
 		<field name="monto" class="java.lang.Float"/>
 		<field name="tipo" class="java.lang.String"/>
 		<field name="saldo" class="java.lang.Float"/>
+	</subDataset>
+	<subDataset name="DetalleVentaDataSet" uuid="5293a0ab-79b9-4335-9edc-bb5b1e5997e3">
+		<field name="codigo_prod" class="java.lang.String"/>
+		<field name="descprod" class="java.lang.String"/>
+		<field name="cantidad" class="java.lang.Integer"/>
 	</subDataset>
 	<parameter name="folioTarjeta" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
@@ -239,6 +264,7 @@
 	<parameter name="strVendedor" class="java.lang.String"/>
 	<parameter name="strCliente" class="java.lang.String"/>
 	<parameter name="strDirCliente" class="java.lang.String"/>
+	<parameter name="detalleVentaDataSource" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
 	<queryString>
 		<![CDATA[]]>
 	</queryString>
@@ -381,9 +407,9 @@
 		</band>
 	</pageHeader>
 	<detail>
-		<band height="125" splitType="Stretch">
+		<band height="309" splitType="Stretch">
 			<componentElement>
-				<reportElement key="table 9" style="table 9" x="64" y="0" width="350" height="125" uuid="e525cf1e-2fd9-49df-a3ca-99859257e95e"/>
+				<reportElement key="table 9" style="table 9" x="22" y="109" width="350" height="125" uuid="e525cf1e-2fd9-49df-a3ca-99859257e95e"/>
 				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
 					<datasetRun subDataset="pagosDataSource" uuid="e54d8e1a-8112-406c-a79d-028e42cdec83">
 						<dataSourceExpression><![CDATA[$P{ItemsDataSource}]]></dataSourceExpression>
@@ -459,6 +485,59 @@
 								<reportElement x="0" y="0" width="80" height="51" uuid="d839081b-55b9-4b07-95eb-92116e6ae9f0"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{saldo}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+			<componentElement>
+				<reportElement key="table 10" style="table 10" x="22" y="17" width="450" height="65" uuid="a315f155-1cfc-4c2b-8979-7f4aab5a479e"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="DetalleVentaDataSet" uuid="f276e233-2d96-44e0-9157-123949ddad23">
+						<dataSourceExpression><![CDATA[$P{detalleVentaDataSource}]]></dataSourceExpression>
+					</datasetRun>
+					<jr:column width="90" uuid="72806ae3-4867-480c-8701-5d8451a894c4">
+						<jr:columnHeader style="table 10_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="c93e051f-a639-49a1-9b8b-cdeb3320e492"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Codigo Producto]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 10_TD" height="32" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="32" uuid="ecbc25ef-a47e-45bf-a43a-56b51893b04b"/>
+								<textFieldExpression><![CDATA[$F{codigo_prod}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="267" uuid="97db0b15-c6b8-489f-ac12-e12d556998f1">
+						<jr:columnHeader style="table 10_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="267" height="30" uuid="5b934079-620e-45e7-b68e-51c783182eba"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Descripcion]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 10_TD" height="32" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="267" height="32" uuid="d5201b23-bb50-4a3a-99c2-8a3a0563befd"/>
+								<textFieldExpression><![CDATA[$F{descprod}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="9d65f28d-b08a-4d5b-8eac-55e326dd69f2">
+						<jr:columnHeader style="table 10_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="41ed098d-dadc-41f3-81ab-9ee1d2605ee7"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Cantidad]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 10_TD" height="32" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="32" uuid="4c81883d-8cfa-446e-a872-08c280bd3f14"/>
+								<textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
 							</textField>
 						</jr:detailCell>
 					</jr:column>

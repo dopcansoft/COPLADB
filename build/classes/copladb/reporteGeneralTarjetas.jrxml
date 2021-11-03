@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f8c43013-2345-4d48-99e3-76a92219b0fb">
-	<property name="ireport.zoom" value="1.9487171000000019"/>
-	<property name="ireport.x" value="47"/>
-	<property name="ireport.y" value="202"/>
+	<property name="ireport.zoom" value="1.1000000000000008"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="348"/>
 	<style name="table">
 		<box>
 			<pen lineWidth="1.0" lineColor="#000000"/>
@@ -23,11 +23,38 @@
 			<pen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
 	<subDataset name="pagosDataSet" uuid="0235baf6-ccf4-4305-a25e-fe2ec70b08cc">
 		<field name="fecha" class="java.lang.String"/>
 		<field name="monto" class="java.lang.Float"/>
 		<field name="tipo" class="java.lang.String"/>
 		<field name="saldo" class="java.lang.Float"/>
+	</subDataset>
+	<subDataset name="detalleVentaDataSet" uuid="2df3acb6-b321-463e-8132-10dcaed7d527">
+		<field name="codigo_prod" class="java.lang.String"/>
+		<field name="descprod" class="java.lang.String"/>
+		<field name="cantidad" class="java.lang.Integer"/>
+		<field name="precio_venta" class="java.lang.Float"/>
+		<field name="subTotal" class="java.lang.Float"/>
 	</subDataset>
 	<parameter name="folioTarjeta" class="java.lang.String"/>
 	<parameter name="fechaReg" class="java.lang.String"/>
@@ -41,6 +68,7 @@
 	<parameter name="pagosDeTarjetaDataSource" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
 	<parameter name="strVendedor" class="java.lang.String"/>
 	<parameter name="strDirCliente" class="java.lang.String"/>
+	<parameter name="detalleVentaDataSource" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -181,9 +209,9 @@
 		<band height="45" splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="208" splitType="Stretch">
+		<band height="353" splitType="Stretch">
 			<componentElement>
-				<reportElement key="table" style="table" x="21" y="19" width="350" height="140" uuid="e06e259e-8bd3-4e6e-a138-33f400fa83d7"/>
+				<reportElement key="table" style="table" x="11" y="172" width="350" height="140" uuid="e06e259e-8bd3-4e6e-a138-33f400fa83d7"/>
 				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" whenNoDataType="AllSectionsNoDetail">
 					<datasetRun subDataset="pagosDataSet" uuid="fdad106d-c4f8-4341-a6f6-24185f5bed9c">
 						<dataSourceExpression><![CDATA[$P{pagosDeTarjetaDataSource}]]></dataSourceExpression>
@@ -257,6 +285,76 @@
 								<reportElement x="0" y="0" width="90" height="25" uuid="54840160-e4d9-424a-8995-f7aaf418e743"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{saldo}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+			<componentElement>
+				<reportElement key="table 1" style="table 1" x="11" y="11" width="360" height="110" uuid="e31a795d-2d46-4fbc-bdfb-da523cf7da72"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" whenNoDataType="AllSectionsNoDetail">
+					<datasetRun subDataset="detalleVentaDataSet" uuid="a82f537e-ec90-4561-846d-5a772fe50da2">
+						<dataSourceExpression><![CDATA[$P{detalleVentaDataSource}]]></dataSourceExpression>
+					</datasetRun>
+					<jr:column width="90" uuid="d843a7a4-1903-4c7b-881e-2beddc7139fc">
+						<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="fd898bef-d5ca-43c2-a288-65762ea08631"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Codigo Producto]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 1_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="4053f8ab-0b20-4bc9-a00a-f67549270b7f"/>
+								<textFieldExpression><![CDATA[$F{codigo_prod}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="b5b33d08-7b4d-4b62-ab72-6d9860c882b3">
+						<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="8654a7d8-6b33-42a5-8e10-33bf6c620743"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Descripcion]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 1_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="a0b773df-9f52-49e5-b6bd-87d73556d694"/>
+								<textFieldExpression><![CDATA[$F{descprod}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="5afe681a-5ad9-47d8-90a7-0f23511a7e7f">
+						<jr:tableFooter style="table 1_TH" height="0" rowSpan="1"/>
+						<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="3d1e0b94-fc9b-4d3c-a014-550add635b9a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Cantidad]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 1_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="17ac60b8-4ae1-437d-9df0-bb3a2244e907"/>
+								<textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="b2bc08ae-7cb3-4c05-8b00-4063bb9378df">
+						<jr:tableFooter style="table 1_TH" height="0" rowSpan="1"/>
+						<jr:columnHeader style="table 1_CH" height="30" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="30" uuid="cfe36359-f9ed-493d-b20e-44d2b9e7595c"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Precio Unitario]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="table 1_TD" height="30" rowSpan="1">
+							<textField>
+								<reportElement x="0" y="0" width="90" height="30" uuid="1b1f33e0-7f3e-44a6-9969-bd2539dcbbd3"/>
+								<textFieldExpression><![CDATA[$F{precio_venta}]]></textFieldExpression>
 							</textField>
 						</jr:detailCell>
 					</jr:column>

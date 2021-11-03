@@ -2599,6 +2599,7 @@ public class COPLADB extends Application {
                 JasperReport jasperReport;
                 file = new File("Reportes/Formatos/reporteGeneralTarjetas.jasper");
                 List<pagosRealizados> lstPagosRealizado= new ArrayList<>();
+                List<detalle_venta> lstDetalleVenta= new ArrayList<>();
                 LocalDateTime ld = LocalDateTime.now();
                 String fechaFile = String.valueOf(ld.getDayOfMonth())+String.valueOf(ld.getMonth())+String.valueOf(ld.getYear())+String.valueOf(ld.getHour())+String.valueOf(ld.getMinute())+String.valueOf(ld.getSecond())+String.valueOf(ld.getNano());
                 //String outputFile = userHomeDirectory + File.separatorChar + "ReporteInventario"+fechaFile+".pdf";
@@ -2612,9 +2613,18 @@ public class COPLADB extends Application {
                 if(!lstPagosRealizado.isEmpty()){
                     pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(lstPagosRealizado);
                 }
+                lstWhere.clear();
+                lstWhere.add("idTarjeta = "+ t.getIdTarjeta());
+                List<detalle_venta> lstDetVentTemp = new ArrayList(detVentaDAO.consultarDetalleVenta(lstWhere));
+                if (!lstDetVentTemp.isEmpty()) lstDetalleVenta.addAll(lstDetVentTemp);
+                JRBeanCollectionDataSource detalleVentaJRBean = null;
+                if(!lstDetalleVenta.isEmpty()){
+                    detalleVentaJRBean = new JRBeanCollectionDataSource(lstDetalleVenta);
+                }
                 //JRBeanCollectionDataSource pagosDeTarjetaJRBean = new JRBeanCollectionDataSource(tvTarjetas.getItems());
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("pagosDeTarjetaDataSource", pagosDeTarjetaJRBean);
+                parameters.put("detalleVentaDataSource", detalleVentaJRBean);
                 parameters.put("folioTarjeta", t.getFolio());
                 parameters.put("fechaReg", t.getFecha());
                 parameters.put("strSaldo", t.getSaldo());
@@ -2668,6 +2678,7 @@ public class COPLADB extends Application {
            //JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(tvProductos.getItems().subList(0, tvProductos.getItems().size()-1));
            JRBeanCollectionDataSource itemsJRBean = new JRBeanCollectionDataSource(tvPagosRealizado.getItems());
            System.out.println("Hay "+tvPagosRealizado.getItems().size());
+           List<detalle_venta> lstDetalleVenta= new ArrayList<>();
            ObservableList<pagosRealizados> lstPagosRealizado =  tvPagosRealizado.getItems();
            tarjeta tarjetaSeleccionada = (tarjeta)tvTarjetas.getSelectionModel().getSelectedItem();
            for (pagosRealizados p: lstPagosRealizado){
@@ -2675,8 +2686,19 @@ public class COPLADB extends Application {
                 System.out.println("Monto"+p.getMonto());
                 System.out.println("Tipo"+p.getTipo());
            }
+           
+            lstWhere.clear();
+            lstWhere.add("idTarjeta = "+ tarjetaSeleccionada.getIdTarjeta());
+            List<detalle_venta> lstDetVentTemp = new ArrayList(detVentaDAO.consultarDetalleVenta(lstWhere));
+            if (!lstDetVentTemp.isEmpty()) lstDetalleVenta.addAll(lstDetVentTemp);
+            JRBeanCollectionDataSource detalleVentaJRBean = null;
+            if(!lstDetalleVenta.isEmpty()){
+                detalleVentaJRBean = new JRBeanCollectionDataSource(lstDetalleVenta);
+            }           
+           
            Map<String, Object> parameters = new HashMap<>();
            parameters.put("ItemsDataSource", itemsJRBean);
+           parameters.put("detalleVentaDataSource", detalleVentaJRBean);
            String folio = tfFolio.getText();
            parameters.put("folioTarjeta", folio);
            String fechaReg = dpFecha.getValue().toString();
@@ -6503,6 +6525,38 @@ public class COPLADB extends Application {
         lstWhere.add("idProducto is not null");
         //lstInventario = invDAO.consultarInventario(lstWhere);
         tvProductos.setItems(FXCollections.observableArrayList(invDAO.consultarInventario(lstWhere)));
+        
+       MenuItem item = new MenuItem("Copiar Todo");
+       item.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                ObservableList<inventario> posList = tvProductos.getItems();
+                int old_r = -1;
+                StringBuilder clipboardString = new StringBuilder();
+                clipboardString.append("Codigo Producto \t Existencia \t Descripcion \t U. Medida \t Precio Contado \tP. Credi-Contado "
+                        + "\tP. Credito \t Proveedor \tId. Categoria \n");
+                for (inventario p : posList) {
+
+                       clipboardString.append(
+                                p.getCodigoProducto()+" \t"
+                               +p.getExistencia()+" \t"
+                               +p.getDescripcion()+" \t"
+                               +p.getUnidadMedida()+" \t"
+                               +p.getPrecioContado()+" \t"
+                               +p.getPrecio_crediContado()+" \t"
+                               +p.getPrecio_credito()+" \t"
+                               +p.getProveedor()+" \t"
+                               +p.getIdCategoria()+" \n");
+                }  
+            final ClipboardContent content = new ClipboardContent();
+            content.putString(clipboardString.toString());
+            Clipboard.getSystemClipboard().setContent(content);
+            }
+            } );
+            ContextMenu menu = new ContextMenu();
+            menu.getItems().addAll(item);
+            tvProductos.setContextMenu(menu);        
+        
         
         btnSeleccionar.setOnMouseClicked((event) -> {
             if(rbTodos.isSelected()){

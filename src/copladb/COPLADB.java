@@ -94,6 +94,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -208,6 +209,12 @@ public class COPLADB extends Application {
     MenuItem miModificarProducto = new MenuItem("Modificar/Consultar Producto");
     MenuItem miEliminarProducto = new MenuItem("Eliminar Producto");
     MenuItem miEstadisticasProductos = new MenuItem("Estadisticas de Productos");
+    
+    //Opciones del menu compras
+    MenuItem miNuevaComprar = new MenuItem("Comprar Producto");    
+    MenuItem miModificarCompra = new MenuItem("Modificar/Consultar Compra Producto");
+    MenuItem miEliminarCompra = new MenuItem("Eliminar Compra");
+    
     //Opciones del menu Gastos
     MenuItem miAgregarGastos = new MenuItem("Agregar Gasto");
     MenuItem miModificarGastos = new MenuItem("Modificar/Consultar Gasto");
@@ -484,15 +491,19 @@ public class COPLADB extends Application {
               }
         });
         
-        Menu submenuUsuarios = new Menu("Usuarios");
-        submenuUsuarios.getItems().addAll(miNuevoUsuario, miModificarUsuario, miEliminarUsuario, miAccesosUsuario);        
-
         miSalir.setOnAction(((event) -> {
                 primaryStage.close();
           }));
         //Submenus
         Menu smTarjetas = new Menu("Tarjetas");
         smTarjetas.getItems().addAll(miNuevaTarjeta, miModificarTarjeta, miEliminarTarjeta, miAsignarTarjetas);
+        Menu smCompras = new Menu("Compras");
+        smCompras.getItems().addAll(miNuevaComprar, miModificarCompra, miEliminarCompra);
+        Menu submenuUsuarios = new Menu("Usuarios");
+        submenuUsuarios.getItems().addAll(miNuevoUsuario, miModificarUsuario, miEliminarUsuario, miAccesosUsuario);        
+        
+        //Separadores de menus
+        SeparatorMenuItem miSepCompras = new SeparatorMenuItem();
         
         //MenuPrincipal
         Menu mCobranza = new Menu("Cobranza");
@@ -504,7 +515,7 @@ public class COPLADB extends Application {
         Menu mCobradores = new Menu("Cobradores");
         mCobradores.getItems().addAll(miAgregarCobrador, miModificarCobrador, miEliminarCobrador, miEstadoCobrador);
         Menu mInventario = new Menu("Inventario");
-        mInventario.getItems().addAll(miAgregarProducto, miModificarProducto, miEliminarProducto, miEstadisticasProductos);
+        mInventario.getItems().addAll(miAgregarProducto, miModificarProducto, miEliminarProducto, miEstadisticasProductos, miSepCompras, smCompras);
         Menu mGastos = new Menu("Gastos");
         mGastos.getItems().addAll(miAgregarGastos, miModificarGastos, miEliminarGastos, miAcumuladoCaja);
         Menu mHerramientas = new Menu("Herramientas");

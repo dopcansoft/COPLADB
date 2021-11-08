@@ -51,6 +51,10 @@ import copladb.DAO.cobradorDAO;
 import copladb.DTO.cobrador;
 import copladb.DAO.inventarioDAO;
 import copladb.DTO.inventario;
+import copladb.DAO.compraDAO;
+import copladb.DTO.compra;
+import copladb.DAO.detalle_compraDAO;
+import copladb.DTO.detalle_compra;
 import copladb.DAO.pagosProyectadosDAO;
 import copladb.DTO.pagosProyectados;
 import copladb.DAO.pagosRealizadosDAO;
@@ -67,6 +71,7 @@ import copladb.DTO.usuario;
 import copladb.DAO.usuarioDAO;
 import copladb.DTO.accesos;
 import copladb.DAO.accesosDAO;
+import copladb.DTO.detalle_compra;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -94,6 +99,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Separator;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
@@ -138,6 +144,8 @@ public class COPLADB extends Application {
     cobrador cobraDTO = new cobrador();
     inventarioDAO invDAO = new inventarioDAO();
     inventario invDTO = new inventario();
+    compraDAO compDAO = new compraDAO();
+    detalle_compraDAO detCompDAO = new detalle_compraDAO();
     gastoDAO gasDAO = new gastoDAO();
     gasto gasDTO = new gasto();
     detalleVentaDAO detVentaDAO = new detalleVentaDAO();
@@ -153,6 +161,8 @@ public class COPLADB extends Application {
     List<tarjeta> lstTarjetas = new ArrayList<>();
     List<tarjetaAsignadas> lstTarjetasAsignadas = new ArrayList<>();
     List<inventario> lstInventario = new ArrayList<>();
+    ObservableList<detalle_compra> lstDetcompra = FXCollections.observableArrayList();
+    ObservableList<compra> lstCompra = FXCollections.observableArrayList();
     List<detalle_venta> lstDetVenta = new ArrayList<>();
     ObservableList<pagosProyectados> lstobPagProyectados = FXCollections.observableArrayList();
     ObservableList<pagosRealizados> lstobPagRealizados = FXCollections.observableArrayList();
@@ -420,6 +430,37 @@ public class COPLADB extends Application {
             }
         });
         
+        // opciones del submenu compras
+              miNuevaComprar.setOnAction((ActionEvent e) -> {
+              if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaNuevaCompra());
+              }
+              else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaNuevaCompra());
+              }
+            });
+          
+          
+          miModificarCompra.setOnAction((ActionEvent e) -> {
+              if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaModificarConsultarCompra());
+              }
+              else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaModificarConsultarCompra());
+              }
+            });
+          
+          miEliminarCompra.setOnAction((ActionEvent e) -> {
+              if (vbAreaTrabajo.getChildren().size() <= 0){ 
+               vbAreaTrabajo.getChildren().addAll(vistaEliminarConsultarCompra());
+              }
+              else{
+               removerVistas();
+               vbAreaTrabajo.getChildren().addAll(vistaEliminarConsultarCompra());
+              }
+            });
         
         //Opciones del menu Gastos
         miAgregarGastos.setOnAction((event) -> {
@@ -6943,6 +6984,971 @@ public class COPLADB extends Application {
         vbPpal.getChildren().addAll(lbTitulo,gpTipoSeleccion, hbBody);
         
         return vbPpal;    
+    }
+    
+    //Modulos de Compras
+    private VBox vistaNuevaCompra(){
+        Label lbTituloVista = new Label("REGISTRAR COMPRAS");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+        if (!lstDetcompra.isEmpty()){lstDetcompra.clear();}
+        
+        VBox vbVistaPpal = new VBox();
+        
+        Label lbFechaCompra = new Label("Fecha Compra: ");
+        Label lbFolioNotaCompra = new Label("Folio Nota Compra: ");
+	Label lbCantidad  = new Label("Cantidad: ");
+	Label lbCodigoProd  = new Label("Codigo Producto: ");
+        Label lbDescProducto = new Label ("Descripción Producto: ");
+        Label lbCostoCompra = new Label ("Costo Compra Unitario: ");
+        Label lbCodigoFactura = new Label ("Codigo Factura: ");
+        
+        
+        DatePicker dpFecha = new DatePicker(LocalDate.now());
+        TextField tfFolioNotaCompra = new TextField();
+        TextField tfCostoCompra = new TextField();
+        tfCostoCompra.setMaxWidth(80);
+        TextField tfCantidad = new TextField();
+        tfCantidad.setMaxWidth(80);
+        TextField tfCodigoFactura = new TextField();
+        TextField tfCodigoProducto = new TextField();
+        TextField tfDescrProd = new TextField();
+        tfDescrProd.setMaxWidth(300);
+        tfDescrProd.setPrefWidth(300);
+        
+        //Componentes de Interfaz
+        Label lbTipoBusqueda = new Label("Buscar por: ");
+        
+        ToggleGroup tgBusquedas = new ToggleGroup();
+        
+        RadioButton rbTodos = new RadioButton("Todos");
+        RadioButton rbCodigo = new RadioButton("Codigo");
+        RadioButton rbDescripcion = new RadioButton("Descripción");
+        RadioButton rbCategoria = new RadioButton("Categoria");
+        rbTodos.setSelected(true);
+        
+        rbTodos.setToggleGroup(tgBusquedas);
+        rbCodigo.setToggleGroup(tgBusquedas);
+        rbDescripcion.setToggleGroup(tgBusquedas);
+        rbCategoria.setToggleGroup(tgBusquedas);
+        
+//       List<String> lstCategorias = new ArrayList<>();
+//       List<String> lstWherecat = new ArrayList<>();
+//       lstWherecat.add("id_categoria is not null");
+//       for (categoria i : categDAO.consultarCategoria(lstWherecat)){
+//            lstCategorias.add(i.getCategoria());
+//       }
+        
+        Label lbCodigo = new Label("Codigo: ");
+        TextField tfCodigo = new TextField();
+        Label lbDescripcion = new Label("Descripción: ");
+        TextField tfDescripcion = new TextField();
+        Label lbCategoria = new Label("Categoria: ");
+//        ComboBox cbCategoria = new ComboBox(FXCollections.observableArrayList(lstCategorias));
+//        cbCategoria.setPrefWidth(140);
+        
+        Label lbInventario = new Label("Tabla Inventario: ");
+        TableView tvInventario = new TableView();
+        tvInventario.setPrefHeight(350);
+        tvInventario.setPrefWidth(550);
+        
+        TableColumn<inventario, Integer> codigoProdColumna = new TableColumn<>("Codigo Producto");
+        codigoProdColumna.setMinWidth(120);
+        codigoProdColumna.setCellValueFactory(new PropertyValueFactory<>("CodigoProducto"));
+
+        TableColumn<inventario, Integer> existenciaColumna = new TableColumn<>("Existencia");
+        existenciaColumna.setMinWidth(120);
+        existenciaColumna.setCellValueFactory(new PropertyValueFactory<>("Existencia"));
+        
+        TableColumn<inventario, Float> pContadoColumna = new TableColumn<>("Precio Contado");
+        pContadoColumna.setMinWidth(120);
+        pContadoColumna.setCellValueFactory(new PropertyValueFactory<>("PrecioContado"));        
+
+        TableColumn<inventario, Float> pCrediContadoColumna = new TableColumn<>("Precio Credi-Contado ");
+        pCrediContadoColumna.setMinWidth(120);
+        pCrediContadoColumna.setCellValueFactory(new PropertyValueFactory<>("Precio_crediContado"));
+        
+        TableColumn<inventario, Float> pCreditoColumna = new TableColumn<>("Precio Credito");
+        pCreditoColumna.setMinWidth(120);
+        pCreditoColumna.setCellValueFactory(new PropertyValueFactory<>("Precio_credito"));
+        
+        TableColumn<inventario, String> descripcionColumna = new TableColumn<>("Descripción");
+        descripcionColumna.setMinWidth(120);
+        descripcionColumna.setCellValueFactory(new PropertyValueFactory<>("Descripcion"));
+        
+        TableColumn<inventario, String> uMedidaColumna = new TableColumn<>("Unidad Medidad");
+        uMedidaColumna.setMinWidth(120);
+        uMedidaColumna.setCellValueFactory(new PropertyValueFactory<>("UnidadMedida"));
+
+        TableColumn<inventario, Float> categoriaColumna = new TableColumn<>("Categoria");
+        categoriaColumna.setMinWidth(120);
+        categoriaColumna.setCellValueFactory(new PropertyValueFactory<>("idCategoria"));
+        
+        TableColumn<inventario, Integer> codProvColumna = new TableColumn<>("Codigo Proveedor");
+        codProvColumna.setMinWidth(120);
+        codProvColumna.setCellValueFactory(new PropertyValueFactory<>("Proveedor"));
+        
+        tvInventario.getColumns().addAll(codigoProdColumna, descripcionColumna, existenciaColumna,
+                pContadoColumna, pCrediContadoColumna, pCreditoColumna, uMedidaColumna, codProvColumna, categoriaColumna);
+        List<String> lstWhere = new ArrayList<>();
+        lstWhere.add("CodigoProducto is not null");
+        tvInventario.setItems(FXCollections.observableArrayList( invDAO.consultarInventario(lstWhere)));
+        
+        tvInventario.setOnMouseClicked((event) -> {
+            inventario inv = new inventario();
+            inv = (inventario) tvInventario.getSelectionModel().getSelectedItem();
+            tfCodigoProducto.setText(inv.getCodigoProducto());
+            tfDescrProd.setText(inv.getDescripcion());
+        });
+        Label lbProducto = new Label("Tabla Producto Comprados: ");
+        TableView tvProductosSelecc = new TableView();
+        tvProductosSelecc.setPrefHeight(350);
+        tvProductosSelecc.setPrefWidth(550);
+        
+        //id_detalle_compra, id_compra, codigo_prod, cantidad, costo_compra, bandera
+        
+        TableColumn<detalle_compra, Integer> codigoProCompColumna = new TableColumn<>("Codigo Producto");
+        codigoProCompColumna.setMinWidth(80);
+        codigoProCompColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_prod"));
+        
+        TableColumn<detalle_compra, String> descrProCompColumna = new TableColumn<>("Descripción Producto");
+        descrProCompColumna.setMinWidth(220);
+        descrProCompColumna.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        
+        TableColumn<detalle_compra, Integer> cantidadProCompColumna = new TableColumn<>("Cantidad");
+        cantidadProCompColumna.setMinWidth(80);
+        cantidadProCompColumna.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        
+        TableColumn<detalle_compra, Integer> costoProCompColumna = new TableColumn<>("Costo Compra");
+        costoProCompColumna.setMinWidth(80);
+        costoProCompColumna.setCellValueFactory(new PropertyValueFactory<>("costo_compra"));
+              
+        tvProductosSelecc.getColumns().addAll(codigoProCompColumna, descrProCompColumna, cantidadProCompColumna, costoProCompColumna);
+        tvProductosSelecc.setItems(lstDetcompra);
+
+        Button btnAgregarProducto = new Button("Agregar Producto");
+        btnAgregarProducto.setOnAction((ActionEvent e)->{
+            detalle_compra det_Compra = new detalle_compra();
+            det_Compra.setCodigo_prod(tfCodigoProducto.getText());
+            det_Compra.setDescripcion(tfDescrProd.getText());
+            det_Compra.setCantidad(Integer.parseInt(tfCantidad.getText()));
+            float fcosto = Float.valueOf(tfCostoCompra.getText()); 
+            det_Compra.setCosto_compra(fcosto);
+            lstDetcompra.add(det_Compra);
+        });
+        
+        MenuItem miEliminaProSelec = new MenuItem("Eliminar");
+        miEliminaProSelec.setOnAction((event) -> {
+            tvProductosSelecc.getItems().remove(
+                    tvProductosSelecc.getSelectionModel().getSelectedIndex());
+        });
+        ContextMenu cmOpcionEliminar = new ContextMenu();
+        cmOpcionEliminar.getItems().add(miEliminaProSelec);
+        tvProductosSelecc.setContextMenu(cmOpcionEliminar);
+        
+        VBox vbHead = new VBox();
+
+        HBox hbTipoSeleccion = new HBox();
+        hbTipoSeleccion.getChildren().addAll(rbTodos, rbCodigo, rbDescripcion, rbCategoria);
+        hbTipoSeleccion.setPadding(new Insets(5, 5, 5, 5));
+        hbTipoSeleccion.setSpacing(5);
+        
+        VBox vbCodigo = new VBox();
+        vbCodigo.getChildren().addAll(lbCodigo, tfCodigo);
+        vbCodigo.setSpacing(5);
+        
+        VBox vbDesc = new VBox();
+        vbDesc.getChildren().addAll(lbDescripcion, tfDescripcion);
+        vbDesc.setSpacing(5);
+        
+//        VBox vbCat = new VBox();
+//        vbCat.getChildren().addAll(lbCategoria, cbCategoria);
+//        vbCat.setSpacing(5);
+        
+        
+        HBox hbCompSeleccion = new HBox();
+        Button btnBuscarProductos = new Button("Seleccionar");
+        btnBuscarProductos.setMaxHeight(50);
+        btnBuscarProductos.setOnAction((ActionEvent e)->{
+         List<inventario> lstInv = new ArrayList<>();
+         List<String> lstWherelc = new ArrayList<>();
+         
+          if (rbTodos.isSelected()){
+           lstWhere.clear();
+           lstWherelc.add("CodigoProducto is not null");
+           tvInventario.setItems(FXCollections.observableList(invDAO.consultarInventario(lstWherelc)));
+         } 
+         
+         if (rbCodigo.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("CodigoProducto = '"+tfCodigo.getText()+"'");
+           tvInventario.setItems(FXCollections.observableList(invDAO.consultarInventario(lstWhere)));
+         }
+         if (rbDescripcion.isSelected()){
+           lstWhere.clear();             
+           lstWherelc.add("descripcion like '%"+tfDescripcion.getText()+"%' ");
+           tvInventario.setItems(FXCollections.observableList(invDAO.consultarInventario(lstWherelc)));
+         }
+         
+//         if (rbCategoria.isSelected()){
+//           lstWhere.clear();
+//           lstWherecat.add("id_categoria is not null");  
+//           for (categoria i : categDAO.consultarCategoria(lstWherecat)){
+//             String strCategoria =  i.getCategoria();
+//             if (strCategoria.compareTo(cbCategoria.getSelectionModel().getSelectedItem().toString())==0){
+//                  lstWhere.add("id_categoria = "+i.getId_categoria());
+//                  tvInventario.setItems(invent.consultarInventario(lstWhere));
+//             }
+//           }
+//         }
+        });
+        
+//        hbCompSeleccion.getChildren().addAll(vbCodigo, vbDesc, vbCat, btnBuscarProductos);
+        hbCompSeleccion.getChildren().addAll(vbCodigo, vbDesc, btnBuscarProductos);
+        hbCompSeleccion.setPadding(new Insets(10, 10, 10, 10));
+        hbCompSeleccion.setSpacing(5);
+
+        Separator spSeleccionProductos = new Separator();
+        vbHead.getChildren().addAll(lbTipoBusqueda, hbTipoSeleccion, hbCompSeleccion, spSeleccionProductos);
+        
+        VBox vbTabInventario = new VBox();
+        vbTabInventario.setPadding(new Insets(5, 5, 5, 5));
+        
+        vbTabInventario.getChildren().addAll(lbInventario, tvInventario, lbProducto, tvProductosSelecc);
+        
+        GridPane gpBloqueProducto = new GridPane();
+        gpBloqueProducto.setPadding(new Insets(5, 5, 5, 5));
+        gpBloqueProducto.setVgap(10);
+        gpBloqueProducto.setHgap(10);
+        
+        gpBloqueProducto.add(lbFechaCompra , 0, 0);
+        gpBloqueProducto.add(dpFecha , 1, 0);
+        
+        gpBloqueProducto.add(lbFolioNotaCompra , 2, 0);
+        gpBloqueProducto.add(tfFolioNotaCompra , 3, 0);
+        
+        gpBloqueProducto.add(lbCodigoProd , 0, 1);
+        gpBloqueProducto.add(tfCodigoProducto , 1, 1);
+        
+        gpBloqueProducto.add(lbDescProducto , 2, 1);
+        gpBloqueProducto.add(tfDescrProd , 3, 1);
+        
+        gpBloqueProducto.add(lbCantidad , 0, 2);
+        gpBloqueProducto.add(tfCantidad , 1, 2);
+        
+        gpBloqueProducto.add(lbCodigoFactura , 2, 2);
+        gpBloqueProducto.add(tfCodigoFactura , 3, 2);
+        
+        gpBloqueProducto.add(lbCostoCompra , 0, 3);
+        gpBloqueProducto.add(tfCostoCompra , 1, 3);
+        
+        gpBloqueProducto.add(btnAgregarProducto, 3, 3);
+
+        Button btnCancelar = new Button("Cancelar");
+        btnCancelar.setOnAction(new EventHandler<ActionEvent>() {
+            
+            @Override
+            public void handle(ActionEvent event) {
+                vbAreaTrabajo.getChildren().remove(0);
+            }
+        });
+        
+        Button btnGuardar = new Button("Guardar y Actualizar Existencias");
+        btnGuardar.setOnAction((event) -> {
+              int idCompReg=0;
+              compraDAO compDAO = new compraDAO();
+              detalle_compraDAO detcompDAO = new detalle_compraDAO();
+
+              compra comp = new compra();
+              comp.setCodigo_factura(tfCodigoFactura.getText());
+              comp.setFecha(dpFecha.getValue().toString());
+              comp.setFolio(tfFolioNotaCompra.getText());
+              idCompReg=compDAO.insertarCompra(comp);
+                for (int i =0; i<lstDetcompra.size(); i++){
+                  detalle_compra detCom = lstDetcompra.get(i);
+                  detCom.setId_compra(idCompReg);
+                  detcompDAO.insertarDetComp(detCom);
+                  lstWhere.add("CodigoProducto= '"+detCom.getCodigo_prod()+"'");
+                  List<inventario> lstiv = invDAO.consultarInventario(lstWhere);
+                  inventario iv = lstiv.get(0);
+                  int existenciaProd = iv.getExistencia();
+                  int nuevaExistenciaProd = existenciaProd + detCom.getCantidad();
+                  invDAO.modificarExistenciaProducto(detCom.getCodigo_prod(), nuevaExistenciaProd);               
+                }
+                Alert altMensaje = new Alert(Alert.AlertType.INFORMATION);
+                altMensaje.setContentText("Compra de Productos Registrada");
+                altMensaje.setTitle("Informacion-Compra");
+                altMensaje.show(); 
+                lstDetcompra.clear();
+                tfCantidad.setText("");
+                tfCodigo.setText("");
+                tfCodigoFactura.setText("");
+                tfCodigoProducto.setText("");
+                tfCostoCompra.setText("");
+                tfDescrProd.setText("");
+                tfFolioNotaCompra.setText("");
+        });
+        
+        HBox hbBotonesInferiores = new HBox();
+        hbBotonesInferiores.setAlignment(Pos.CENTER_RIGHT);
+        hbBotonesInferiores.getChildren().addAll(btnCancelar, btnGuardar);
+        
+        VBox vbTabProducto = new VBox();
+        vbTabProducto.setSpacing(5);
+        vbTabProducto.getChildren().addAll(gpBloqueProducto, hbBotonesInferiores);
+        
+        HBox hbBody = new HBox();
+        hbBody.getChildren().addAll(vbTabInventario, vbTabProducto);
+        
+        vbVistaPpal.getChildren().addAll(lbTituloVista, vbHead,hbBody);
+        
+        return vbVistaPpal; 
+    }
+    private VBox vistaModificarConsultarCompra(){
+        Label lbTituloVista = new Label("Consultar/Modificar COMPRAS");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+        
+        if (lstCompra.size()>0){
+            //lstCompra = FXCollections.observableArrayList();
+            lstCompra.clear();
+        }
+        if (!lstDetcompra.isEmpty()){lstDetcompra.clear();}
+        
+        VBox vbVistaPpal = new VBox();
+        
+        Label lbFechaCompra = new Label("Fecha Compra: ");
+        Label lbFolioNotaCompra = new Label("Folio Nota Compra: ");
+	Label lbCantidad  = new Label("Cantidad: ");
+	Label lbCodigoProd  = new Label("Codigo Producto: ");
+        Label lbDescProducto = new Label ("Descripción Producto: ");
+        Label lbCostoCompra = new Label ("Costo Compra Unitario: ");
+        Label lbCodigoFactura = new Label ("Codigo Factura: ");
+        
+        
+        DatePicker dpFecha = new DatePicker(LocalDate.now());
+        TextField tfFolioNotaCompra = new TextField();
+        TextField tfCostoCompra = new TextField();
+        tfCostoCompra.setMaxWidth(80);
+        TextField tfCantidad = new TextField();
+        tfCantidad.setMaxWidth(80);
+        TextField tfCodigoFactura = new TextField();
+        TextField tfCodigoProducto = new TextField();
+        TextField tfDescrProd = new TextField();
+        tfDescrProd.setMaxWidth(300);
+        tfDescrProd.setPrefWidth(300);
+        
+        //Componentes de Interfaz
+        Label lbTipoBusqueda = new Label("Buscar por: ");
+        
+        ToggleGroup tgBusquedas = new ToggleGroup();
+        
+        RadioButton rbTodos = new RadioButton("Todos");
+        RadioButton rbCodigoFactura = new RadioButton("Codigo Factura");
+        RadioButton rbFolio = new RadioButton("Folio Nota Remision");
+        RadioButton rbFecha = new RadioButton("Fecha Compra");
+        rbFecha.setSelected(true);
+        
+        rbTodos.setToggleGroup(tgBusquedas);
+        rbCodigoFactura.setToggleGroup(tgBusquedas);
+        rbFolio.setToggleGroup(tgBusquedas);
+        rbFecha.setToggleGroup(tgBusquedas);
+               
+        Label lbCodigo = new Label("Codigo Factura: ");
+        TextField tfCodigo = new TextField();
+        Label lbFolioNota = new Label("Folio Nota Remision: ");
+        TextField tfFolio = new TextField();
+        Label lbFecha = new Label("Fecha Compra:");
+        DatePicker dpFechaCompra = new DatePicker(LocalDate.now());
+        
+        
+        Label lbCompras = new Label("Tabla Compras: ");
+        TableView tvCompras = new TableView();
+        tvCompras.setPrefHeight(350);
+        tvCompras.setPrefWidth(550);
+        
+        TableColumn<compra, Integer> idCompraColumna = new TableColumn<>("Id");
+        idCompraColumna.setMinWidth(120);
+        idCompraColumna.setCellValueFactory(new PropertyValueFactory<>("id_compra"));
+
+        TableColumn<compra, String> fechaColumna = new TableColumn<>("Fecha");
+        fechaColumna.setMinWidth(120);
+        fechaColumna.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+        
+        TableColumn<compra, String> codFacColumna = new TableColumn<>("Codigo Factura");
+        codFacColumna.setMinWidth(120);
+        codFacColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_factura"));
+        
+        TableColumn<compra, String> folioRemisionColumna = new TableColumn<>("Folio Remision");
+        folioRemisionColumna.setMinWidth(120);
+        folioRemisionColumna.setCellValueFactory(new PropertyValueFactory<>("folio"));        
+
+        tvCompras.getColumns().addAll(idCompraColumna, fechaColumna, codFacColumna,
+                folioRemisionColumna);
+        
+        LocalDate ldToday = dpFechaCompra.getValue();
+
+        List<String> lstWhere = new ArrayList<>();
+        lstWhere.clear();
+        lstWhere.add("fecha = '"+ldToday.toString()+"' ");
+        //lstWhere.add("id_compra is not null");
+        lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+        tvCompras.setItems(lstCompra);
+        
+        Label lbProducto = new Label("Tabla Producto Comprados: ");
+        TableView tvProductosSelecc = new TableView();
+        tvProductosSelecc.setPrefHeight(350);
+        tvProductosSelecc.setPrefWidth(550);
+        
+        TableColumn<detalle_compra, Integer> codigoProCompColumna = new TableColumn<>("Codigo Producto");
+        codigoProCompColumna.setMinWidth(80);
+        codigoProCompColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_prod"));
+        
+        TableColumn<detalle_compra, String> descrProCompColumna = new TableColumn<>("Descripción Producto");
+        descrProCompColumna.setMinWidth(220);
+        descrProCompColumna.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        
+        TableColumn<detalle_compra, Integer> cantidadProCompColumna = new TableColumn<>("Cantidad");
+        cantidadProCompColumna.setMinWidth(80);
+        cantidadProCompColumna.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        
+        TableColumn<detalle_compra, Integer> costoProCompColumna = new TableColumn<>("Costo Compra");
+        costoProCompColumna.setMinWidth(80);
+        costoProCompColumna.setCellValueFactory(new PropertyValueFactory<>("costo_compra"));
+              
+        tvProductosSelecc.getColumns().addAll(codigoProCompColumna, descrProCompColumna, cantidadProCompColumna, costoProCompColumna);
+        tvProductosSelecc.setItems(lstDetcompra);
+
+        tvCompras.setOnMouseClicked((event) -> {
+           if (tvCompras.getItems().size()>0){
+             compra compT = new compra();
+             compT = (compra) tvCompras.getSelectionModel().getSelectedItem();
+             tfFolioNotaCompra.setText(compT.getFolio());
+             tfCodigoFactura.setText(compT.getCodigo_factura());
+             lstWhere.clear();
+             lstWhere.add("id_compra = "+compT.getId_compra());
+             lstDetcompra = FXCollections.observableArrayList(detCompDAO.consultaDetComp(lstWhere));
+             for (detalle_compra detc: lstDetcompra){
+                 lstWhere.add("CodigoProducto = '"+detc.getCodigo_prod()+"'");
+                 detc.setDescripcion(invDAO.consultarInventario(lstWhere).get(0).getDescripcion());
+             }
+             tvProductosSelecc.setItems(lstDetcompra);
+           }
+        });
+
+        Button btnAgregarProducto = new Button("Modificar Producto");
+        btnAgregarProducto.setOnAction((ActionEvent e)->{
+            
+            detalle_compra det_Compra = new detalle_compra();
+            det_Compra = (detalle_compra)tvProductosSelecc.getSelectionModel().getSelectedItem();
+
+            lstWhere.clear();
+            lstWhere.add("CodigoProducto = '"+tfCodigoProducto.getText()+"'");
+            inventario invTemp = invDAO.consultarInventario(lstWhere).get(0);
+            int exist = invTemp.getExistencia();
+            exist = exist - det_Compra.getCantidad();
+            invDAO.modificarExistenciaProducto(det_Compra.getCodigo_prod(), exist);
+            exist = exist + Integer.parseInt(tfCantidad.getText());
+            invDAO.modificarExistenciaProducto(det_Compra.getCodigo_prod(), exist);
+            tvProductosSelecc.getItems().remove(
+            tvProductosSelecc.getSelectionModel().getSelectedIndex());
+            
+            det_Compra.setCodigo_prod(tfCodigoProducto.getText());
+            det_Compra.setDescripcion(tfDescrProd.getText());
+            det_Compra.setCantidad(Integer.parseInt(tfCantidad.getText()));
+            float fcosto = Float.valueOf(tfCostoCompra.getText()); 
+            det_Compra.setCosto_compra(fcosto);
+            lstDetcompra.add(det_Compra);
+            tvProductosSelecc.setItems(lstDetcompra);
+        });
+        
+        MenuItem miEliminaProSelec = new MenuItem("Eliminar");
+        miEliminaProSelec.setOnAction((event) -> {
+            detalle_compra detComTemp= (detalle_compra) tvProductosSelecc.getSelectionModel().getSelectedItem();
+            lstWhere.clear();
+            lstWhere.add("CodigoProducto = '"+tfCodigoProducto.getText()+"'");
+            inventario invTemp = invDAO.consultarInventario(lstWhere).get(0);
+            int exist = invTemp.getExistencia();
+            int retExist = detComTemp.getCantidad();
+            if (exist > retExist){
+              exist = exist - detComTemp.getCantidad();
+              detCompDAO.borrarDetComp(detComTemp.getId_detalle_compra());
+              invDAO.modificarExistenciaProducto(detComTemp.getCodigo_prod(), exist);
+              tvProductosSelecc.getItems().remove(
+              tvProductosSelecc.getSelectionModel().getSelectedIndex());
+            }else{
+              Alert resp = new Alert(Alert.AlertType.ERROR);
+              resp.setTitle("Error");
+              resp.setContentText("No se puede retirar existencia por resta negativa en inventario!! ");
+              resp.showAndWait();
+            }
+        });
+        ContextMenu cmOpcionEliminar = new ContextMenu();
+        cmOpcionEliminar.getItems().add(miEliminaProSelec);
+        tvProductosSelecc.setContextMenu(cmOpcionEliminar);
+        
+        tvProductosSelecc.setOnMouseClicked((event) -> {
+            detalle_compra detcompT = (detalle_compra) tvProductosSelecc.getSelectionModel().getSelectedItem();
+            tfCantidad.setText(String.valueOf(detcompT.getCantidad()));
+            tfCodigoProducto.setText(String.valueOf(detcompT.getCodigo_prod()));
+            tfDescrProd.setText(detcompT.getDescripcion());
+            tfCostoCompra.setText(String.valueOf(detcompT.getCosto_compra()));
+        });
+        
+        Button btnGenerar = new Button("Generar Reporte ..");
+        btnGenerar.setOnAction((event) -> {
+          ////Preguntar si quieren el reporte jasper
+        });
+        
+        VBox vbHead = new VBox();
+
+        HBox hbTipoSeleccion = new HBox();
+        hbTipoSeleccion.getChildren().addAll(rbTodos, rbCodigoFactura, rbFolio, rbFecha);
+        hbTipoSeleccion.setPadding(new Insets(5, 5, 5, 5));
+        hbTipoSeleccion.setSpacing(5);
+        
+        VBox vbCodigo = new VBox();
+        vbCodigo.getChildren().addAll(lbCodigo, tfCodigo);
+        vbCodigo.setSpacing(5);
+        
+        VBox vbFolioNota = new VBox();
+        vbFolioNota.getChildren().addAll(lbFolioNota, tfFolio);
+        vbFolioNota.setSpacing(5);
+        
+        VBox vbFechaSelec = new VBox();
+        vbFechaSelec.getChildren().addAll(lbFecha, dpFechaCompra);
+        vbFechaSelec.setSpacing(5);
+        
+        HBox hbCompSeleccion = new HBox();
+        Button btnBuscarProductos = new Button("Seleccionar");
+        btnBuscarProductos.setMaxHeight(50);
+        btnBuscarProductos.setOnAction((ActionEvent e)->{
+         List<inventario> lstInv = new ArrayList<>();
+         List<String> lstWherelc = new ArrayList<>();
+         
+          if (rbTodos.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("id_compra is not null");
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         } 
+         
+         if (rbCodigoFactura.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("codigo_factura = "+tfCodigo.getText());
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         }
+         if (rbFolio.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("folio = "+tfCodigo.getText());
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         }
+         
+         if (rbFecha.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("fecha = '"+dpFechaCompra.getValue().toString()+"' ");
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         }
+         
+        });
+        
+        hbCompSeleccion.getChildren().addAll(vbCodigo, vbFolioNota, vbFechaSelec, btnBuscarProductos);
+        hbCompSeleccion.setPadding(new Insets(10, 10, 10, 10));
+        hbCompSeleccion.setSpacing(5);
+
+        Separator spSeleccionProductos = new Separator();
+        vbHead.getChildren().addAll(lbTipoBusqueda, hbTipoSeleccion, hbCompSeleccion, spSeleccionProductos);
+        
+        VBox vbTabCompra = new VBox();
+        vbTabCompra.setPadding(new Insets(5, 5, 5, 5));
+        
+        vbTabCompra.getChildren().addAll(lbCompras, tvCompras, lbProducto, tvProductosSelecc);
+        
+        GridPane gpBloqueProducto = new GridPane();
+        gpBloqueProducto.setPadding(new Insets(5, 5, 5, 5));
+        gpBloqueProducto.setVgap(10);
+        gpBloqueProducto.setHgap(10);
+        
+        gpBloqueProducto.add(lbFechaCompra , 0, 0);
+        gpBloqueProducto.add(dpFecha , 1, 0);
+        
+        gpBloqueProducto.add(lbFolioNotaCompra , 2, 0);
+        gpBloqueProducto.add(tfFolioNotaCompra , 3, 0);
+        
+        gpBloqueProducto.add(lbCodigoProd , 0, 1);
+        gpBloqueProducto.add(tfCodigoProducto , 1, 1);
+        
+        gpBloqueProducto.add(lbDescProducto , 2, 1);
+        gpBloqueProducto.add(tfDescrProd , 3, 1);
+        
+        gpBloqueProducto.add(lbCantidad , 0, 2);
+        gpBloqueProducto.add(tfCantidad , 1, 2);
+        
+        gpBloqueProducto.add(lbCodigoFactura , 2, 2);
+        gpBloqueProducto.add(tfCodigoFactura , 3, 2);
+        
+        gpBloqueProducto.add(lbCostoCompra , 0, 3);
+        gpBloqueProducto.add(tfCostoCompra , 1, 3);
+        
+        gpBloqueProducto.add(btnAgregarProducto, 3, 3);
+
+        Button btnCancelar = new Button("Cancelar");
+        btnCancelar.setOnAction(new EventHandler<ActionEvent>() {
+            
+            @Override
+            public void handle(ActionEvent event) {
+                vbAreaTrabajo.getChildren().remove(0);
+            }
+        });
+        
+        Button btnGuardar = new Button("Modificar Compra");
+        btnGuardar.setOnAction((event) -> {
+              int idCompReg=0;
+              
+              compraDAO compDAO = new compraDAO();
+              detalle_compraDAO detcompDAO = new detalle_compraDAO();
+
+              compra comp = new compra();
+              comp = (compra) tvCompras.getSelectionModel().getSelectedItem();
+              comp.setCodigo_factura(tfCodigoFactura.getText());
+              comp.setFecha(dpFecha.getValue().toString());
+              comp.setFolio(tfFolioNotaCompra.getText());
+              compDAO.modificarCompra(comp);
+                for (int i =0; i<lstDetcompra.size(); i++){
+                  detalle_compra detCom = lstDetcompra.get(i);
+                  //detCom.setId_compra(idCompReg);
+                  detcompDAO.modificarDetComp(detCom);
+                  /*lstWhere.add("codigo_prod= "+detCom.getCodigo_prod());
+                  List<inventario> lstiv = invent.consultaInventario(lstWhere);
+                  inventario iv = lstiv.get(0);
+                  int existenciaProd = iv.getExistencia();
+                  int nuevaExistenciaProd = existenciaProd + detCom.getCantidad();
+                  invent.modificarExistenciaProducto(detCom.getCodigo_prod(), nuevaExistenciaProd);*/             
+                }
+                Alert altMensaje = new Alert(Alert.AlertType.INFORMATION);
+                altMensaje.setContentText("Compra de Productos Registrada");
+                altMensaje.setTitle("Informacion-Compra");
+                altMensaje.show(); 
+                lstDetcompra.clear();
+                tfCantidad.setText("");
+                tfCodigo.setText("");
+                tfCodigoFactura.setText("");
+                tfCodigoProducto.setText("");
+                tfCostoCompra.setText("");
+                tfDescrProd.setText("");
+                tfFolioNotaCompra.setText("");
+        });
+        
+        HBox hbBotonesInferiores = new HBox();
+        hbBotonesInferiores.setAlignment(Pos.CENTER_RIGHT);
+        hbBotonesInferiores.getChildren().addAll(btnCancelar, btnGuardar, btnGenerar);
+        
+        VBox vbTabProducto = new VBox();
+        vbTabProducto.setSpacing(5);
+        vbTabProducto.getChildren().addAll(gpBloqueProducto, hbBotonesInferiores);
+        
+        HBox hbBody = new HBox();
+        hbBody.getChildren().addAll(vbTabCompra, vbTabProducto);
+        
+        vbVistaPpal.getChildren().addAll(lbTituloVista, vbHead,hbBody);
+        
+        return vbVistaPpal; 
+    }
+    private VBox vistaEliminarConsultarCompra(){
+        Label lbTituloVista = new Label("ELIMINAR COMPRAS");
+        Font fuente = new Font("Arial Bold", 36);
+        lbTituloVista.setFont(fuente);
+        
+        if (lstCompra.size()>0){
+            //lstCompra = FXCollections.observableArrayList();
+            lstCompra.clear();
+        }
+        if (!lstDetcompra.isEmpty()){lstDetcompra.clear();}
+        
+        VBox vbVistaPpal = new VBox();
+        
+        Label lbFechaCompra = new Label("Fecha Compra: ");
+        Label lbFolioNotaCompra = new Label("Folio Nota Compra: ");
+	Label lbCantidad  = new Label("Cantidad: ");
+	Label lbCodigoProd  = new Label("Codigo Producto: ");
+        Label lbDescProducto = new Label ("Descripción Producto: ");
+        Label lbCostoCompra = new Label ("Costo Compra Unitario: ");
+        Label lbCodigoFactura = new Label ("Codigo Factura: ");
+        
+        
+        DatePicker dpFecha = new DatePicker(LocalDate.now());
+        TextField tfFolioNotaCompra = new TextField();
+        TextField tfCostoCompra = new TextField();
+        tfCostoCompra.setMaxWidth(80);
+        TextField tfCantidad = new TextField();
+        tfCantidad.setMaxWidth(80);
+        TextField tfCodigoFactura = new TextField();
+        TextField tfCodigoProducto = new TextField();
+        TextField tfDescrProd = new TextField();
+        tfDescrProd.setMaxWidth(300);
+        tfDescrProd.setPrefWidth(300);
+        
+        //Componentes de Interfaz
+        Label lbTipoBusqueda = new Label("Buscar por: ");
+        
+        ToggleGroup tgBusquedas = new ToggleGroup();
+        
+        RadioButton rbTodos = new RadioButton("Todos");
+        RadioButton rbCodigoFactura = new RadioButton("Codigo Factura");
+        RadioButton rbFolio = new RadioButton("Folio Nota Remision");
+        RadioButton rbFecha = new RadioButton("Fecha Compra");
+        rbFecha.setSelected(true);
+        
+        rbTodos.setToggleGroup(tgBusquedas);
+        rbCodigoFactura.setToggleGroup(tgBusquedas);
+        rbFolio.setToggleGroup(tgBusquedas);
+        rbFecha.setToggleGroup(tgBusquedas);
+               
+        Label lbCodigo = new Label("Codigo Factura: ");
+        TextField tfCodigo = new TextField();
+        Label lbFolioNota = new Label("Folio Nota Remision: ");
+        TextField tfFolio = new TextField();
+        Label lbFecha = new Label("Fecha Compra:");
+        DatePicker dpFechaCompra = new DatePicker(LocalDate.now());
+        
+        
+        Label lbCompras = new Label("Tabla Compras: ");
+        TableView tvCompras = new TableView();
+        tvCompras.setPrefHeight(350);
+        tvCompras.setPrefWidth(550);
+        
+        TableColumn<compra, Integer> idCompraColumna = new TableColumn<>("Id");
+        idCompraColumna.setMinWidth(120);
+        idCompraColumna.setCellValueFactory(new PropertyValueFactory<>("id_compra"));
+
+        TableColumn<compra, String> fechaColumna = new TableColumn<>("Fecha");
+        fechaColumna.setMinWidth(120);
+        fechaColumna.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+        
+        TableColumn<compra, String> codFacColumna = new TableColumn<>("Codigo Factura");
+        codFacColumna.setMinWidth(120);
+        codFacColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_factura"));
+        
+        TableColumn<compra, String> folioRemisionColumna = new TableColumn<>("Folio Remision");
+        folioRemisionColumna.setMinWidth(120);
+        folioRemisionColumna.setCellValueFactory(new PropertyValueFactory<>("folio"));        
+
+        tvCompras.getColumns().addAll(idCompraColumna, fechaColumna, codFacColumna,
+                folioRemisionColumna);
+        
+        LocalDate ldToday = dpFechaCompra.getValue();
+
+        List<String> lstWhere = new ArrayList<>();
+        lstWhere.clear();
+        lstWhere.add("fecha = '"+ldToday.toString()+"' ");
+        //lstWhere.add("id_compra is not null");
+        lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+        tvCompras.setItems(lstCompra);
+        
+        Label lbProducto = new Label("Tabla Producto Comprados: ");
+        TableView tvProductosSelecc = new TableView();
+        tvProductosSelecc.setPrefHeight(350);
+        tvProductosSelecc.setPrefWidth(550);
+        
+        TableColumn<detalle_compra, Integer> codigoProCompColumna = new TableColumn<>("Codigo Producto");
+        codigoProCompColumna.setMinWidth(80);
+        codigoProCompColumna.setCellValueFactory(new PropertyValueFactory<>("codigo_prod"));
+        
+        TableColumn<detalle_compra, String> descrProCompColumna = new TableColumn<>("Descripción Producto");
+        descrProCompColumna.setMinWidth(220);
+        descrProCompColumna.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        
+        TableColumn<detalle_compra, Integer> cantidadProCompColumna = new TableColumn<>("Cantidad");
+        cantidadProCompColumna.setMinWidth(80);
+        cantidadProCompColumna.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        
+        TableColumn<detalle_compra, Integer> costoProCompColumna = new TableColumn<>("Costo Compra");
+        costoProCompColumna.setMinWidth(80);
+        costoProCompColumna.setCellValueFactory(new PropertyValueFactory<>("costo_compra"));
+              
+        tvProductosSelecc.getColumns().addAll(codigoProCompColumna, descrProCompColumna, cantidadProCompColumna, costoProCompColumna);
+        tvProductosSelecc.setItems(lstDetcompra);
+
+        tvCompras.setOnMouseClicked((event) -> {
+           if (tvCompras.getItems().size()>0){
+             compra compT = new compra();
+             compT = (compra) tvCompras.getSelectionModel().getSelectedItem();
+             tfFolioNotaCompra.setText(compT.getFolio());
+             tfCodigoFactura.setText(compT.getCodigo_factura());
+             lstWhere.clear();
+             lstWhere.add("id_compra = "+compT.getId_compra());
+             lstDetcompra = FXCollections.observableArrayList(detCompDAO.consultaDetComp(lstWhere));
+             for (detalle_compra detc: lstDetcompra){
+                 lstWhere.add("CodigoProducto = '"+detc.getCodigo_prod()+"'");
+                 detc.setDescripcion(invDAO.consultarInventario(lstWhere).get(0).getDescripcion());
+             }
+             tvProductosSelecc.setItems(lstDetcompra);
+           }
+        });
+
+       
+        tvProductosSelecc.setOnMouseClicked((event) -> {
+            detalle_compra detcompT = (detalle_compra) tvProductosSelecc.getSelectionModel().getSelectedItem();
+            tfCantidad.setText(String.valueOf(detcompT.getCantidad()));
+            tfCodigoProducto.setText(String.valueOf(detcompT.getCodigo_prod()));
+            tfDescrProd.setText(detcompT.getDescripcion());
+            tfCostoCompra.setText(String.valueOf(detcompT.getCosto_compra()));
+        });
+        
+        VBox vbHead = new VBox();
+
+        HBox hbTipoSeleccion = new HBox();
+        hbTipoSeleccion.getChildren().addAll(rbTodos, rbCodigoFactura, rbFolio, rbFecha);
+        hbTipoSeleccion.setPadding(new Insets(5, 5, 5, 5));
+        hbTipoSeleccion.setSpacing(5);
+        
+        VBox vbCodigo = new VBox();
+        vbCodigo.getChildren().addAll(lbCodigo, tfCodigo);
+        vbCodigo.setSpacing(5);
+        
+        VBox vbFolioNota = new VBox();
+        vbFolioNota.getChildren().addAll(lbFolioNota, tfFolio);
+        vbFolioNota.setSpacing(5);
+        
+        VBox vbFechaSelec = new VBox();
+        vbFechaSelec.getChildren().addAll(lbFecha, dpFechaCompra);
+        vbFechaSelec.setSpacing(5);
+        
+        HBox hbCompSeleccion = new HBox();
+        Button btnBuscarProductos = new Button("Seleccionar");
+        btnBuscarProductos.setMaxHeight(50);
+        btnBuscarProductos.setOnAction((ActionEvent e)->{
+         List<inventario> lstInv = new ArrayList<>();
+         List<String> lstWherelc = new ArrayList<>();
+         
+          if (rbTodos.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("id_compra is not null");
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         } 
+         
+         if (rbCodigoFactura.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("codigo_factura = "+tfCodigo.getText());
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         }
+         if (rbFolio.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("folio = "+tfCodigo.getText());
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         }
+         
+         if (rbFecha.isSelected()){
+           lstWhere.clear();
+           lstWhere.add("fecha = '"+dpFechaCompra.getValue().toString()+"' ");
+           lstCompra = FXCollections.observableArrayList(compDAO.consultaCompra(lstWhere));
+           tvCompras.setItems(lstCompra);
+         }
+         
+        });
+        
+        hbCompSeleccion.getChildren().addAll(vbCodigo, vbFolioNota, vbFechaSelec, btnBuscarProductos);
+        hbCompSeleccion.setPadding(new Insets(10, 10, 10, 10));
+        hbCompSeleccion.setSpacing(5);
+
+        Separator spSeleccionProductos = new Separator();
+        vbHead.getChildren().addAll(lbTipoBusqueda, hbTipoSeleccion, hbCompSeleccion, spSeleccionProductos);
+        
+        VBox vbTabCompra = new VBox();
+        vbTabCompra.setPadding(new Insets(5, 5, 5, 5));
+        
+        vbTabCompra.getChildren().addAll(lbCompras, tvCompras, lbProducto, tvProductosSelecc);
+        
+        GridPane gpBloqueProducto = new GridPane();
+        gpBloqueProducto.setPadding(new Insets(5, 5, 5, 5));
+        gpBloqueProducto.setVgap(10);
+        gpBloqueProducto.setHgap(10);
+        
+        gpBloqueProducto.add(lbFechaCompra , 0, 0);
+        gpBloqueProducto.add(dpFecha , 1, 0);
+        
+        gpBloqueProducto.add(lbFolioNotaCompra , 2, 0);
+        gpBloqueProducto.add(tfFolioNotaCompra , 3, 0);
+        
+        gpBloqueProducto.add(lbCodigoProd , 0, 1);
+        gpBloqueProducto.add(tfCodigoProducto , 1, 1);
+        
+        gpBloqueProducto.add(lbDescProducto , 2, 1);
+        gpBloqueProducto.add(tfDescrProd , 3, 1);
+        
+        gpBloqueProducto.add(lbCantidad , 0, 2);
+        gpBloqueProducto.add(tfCantidad , 1, 2);
+        
+        gpBloqueProducto.add(lbCodigoFactura , 2, 2);
+        gpBloqueProducto.add(tfCodigoFactura , 3, 2);
+        
+        gpBloqueProducto.add(lbCostoCompra , 0, 3);
+        gpBloqueProducto.add(tfCostoCompra , 1, 3);
+        
+        Button btnCancelar = new Button("Cancelar");
+        btnCancelar.setOnAction(new EventHandler<ActionEvent>() {
+            
+            @Override
+            public void handle(ActionEvent event) {
+                vbAreaTrabajo.getChildren().remove(0);
+            }
+        });
+        
+        Button btnEliminar = new Button("Eliminar Compra");
+        btnEliminar.setOnAction((event) -> {
+              //compraDAO compDAO = new compraDAO();
+            
+              for(detalle_compra i:lstDetcompra){
+                  lstWhere.clear();
+                  lstWhere.add("CodigoProducto = '"+i.getCodigo_prod()+"'");
+                  inventario invTemp = invDAO.consultarInventario(lstWhere).get(0);
+                  int exist = invTemp.getExistencia();
+                  exist = exist - i.getCantidad();
+                  invDAO.modificarExistenciaProducto(i.getCodigo_prod(), exist);
+                  detCompDAO.borrarDetComp(i.getId_detalle_compra());
+              }
+              compra compTemp;
+              compTemp = (compra)tvCompras.getSelectionModel().getSelectedItem();
+              System.out.println(compTemp.getId_compra());
+              compDAO.borrarCompra(compTemp.getId_compra());
+             
+                Alert altMensaje = new Alert(Alert.AlertType.INFORMATION);
+                altMensaje.setContentText("Compra de Productos Eliminada");
+                altMensaje.setTitle("Informacion-Compra");
+                altMensaje.showAndWait(); 
+                //lstDetcompra.clear();
+                tfCantidad.setText("");
+                tfCodigo.setText("");
+                tfCodigoFactura.setText("");
+                tfCodigoProducto.setText("");
+                tfCostoCompra.setText("");
+                tfDescrProd.setText("");
+                tfFolioNotaCompra.setText("");
+                tvProductosSelecc.getItems().clear();
+                tvCompras.getItems().clear();
+                
+        });
+
+        HBox hbBotonesInferiores = new HBox();
+        hbBotonesInferiores.setAlignment(Pos.CENTER_RIGHT);
+        hbBotonesInferiores.getChildren().addAll(btnCancelar, btnEliminar);
+        
+        VBox vbTabProducto = new VBox();
+        vbTabProducto.setSpacing(5);
+        vbTabProducto.getChildren().addAll(gpBloqueProducto, hbBotonesInferiores);
+        
+        HBox hbBody = new HBox();
+        hbBody.getChildren().addAll(vbTabCompra, vbTabProducto);
+        
+        vbVistaPpal.getChildren().addAll(lbTituloVista, vbHead,hbBody);
+        
+        return vbVistaPpal; 
     }
     
     //Modulos de Gastos

@@ -1956,6 +1956,7 @@ public class COPLADB extends Application {
         TextField tfComision = new TextField();
         Label lbPorcentajeComision = new Label ("% Comision: ");
         TextField tfPorcentajeComision = new TextField();
+        Button btnReporteCobrador = new Button("Gen. Reporte Cobrador");
         
         Button btnRepTarjeta = new Button("Generar reporte Tarjeta");
         Button btnRepGralTarjeta = new Button("Generar Reporte General de Tarjetas ");
@@ -1976,6 +1977,7 @@ public class COPLADB extends Application {
         gpCalculoComision.add(btnCalulaComision, 2, 0);        
         gpCalculoComision.add(lbComision, 0, 1);        
         gpCalculoComision.add(tfComision, 1, 1);        
+        gpCalculoComision.add(btnReporteCobrador, 1, 3);        
         
         
         
@@ -2804,6 +2806,53 @@ public class COPLADB extends Application {
         } catch (JRException ex) {
             ex.printStackTrace();
         }             
+        });
+        
+        btnReporteCobrador.setOnAction((event) -> {
+            //System.out.println("Click Rep Cobradores");
+            ObservableList<tarjeta> lstItems = FXCollections.observableArrayList(tvTarjetas.getItems());
+           int cantidadTarjetas = 0; 
+           List<tarjeta> lstTarjetasTmp = tvTarjetas.getItems();
+             try{              
+                File file;
+                JasperReport jasperReport;
+                file = new File("Reportes/Formatos/reporteCobrador.jasper");
+                LocalDateTime ld = LocalDateTime.now();
+                String fechaFile = String.valueOf(ld.getDayOfMonth())+String.valueOf(ld.getMonth())+String.valueOf(ld.getYear())+String.valueOf(ld.getHour())+String.valueOf(ld.getMinute())+String.valueOf(ld.getSecond())+String.valueOf(ld.getNano());
+                //String outputFile = userHomeDirectory + File.separatorChar + "ReporteInventario"+fechaFile+".pdf";
+                String outputFile = "Reportes/Cobradores/Cobros" + File.separatorChar + "ReporteCobrosTarjeta"+fechaFile+".pdf";
+                //JRBeanCollectionDataSource tarjetasJRBean = new JRBeanCollectionDataSource(tvProductos.getItems().subList(0, tvProductos.getItems().size()-1));
+                jasperReport = (JasperReport) JRLoader.loadObject(file);                
+                JRBeanCollectionDataSource cobrosDeTarjetaJRBean = new JRBeanCollectionDataSource(lstItems);
+
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("cobrosDataSource", cobrosDeTarjetaJRBean);
+                parameters.put("strNombreCobrador", cbCobrador.getValue().toString());
+                parameters.put("strfecha", dpFiltrarFechaCobro.getValue().toString());
+                parameters.put("strComision", tfComision.getText());
+                parameters.put("strCantCobrada", lbCantCobradaValor.getText());
+                parameters.put("strPorcentajeCobrado", tfPorcentajeComision.getText());
+               /* Generando el PDF */
+                //C:\Users\dopcan\Documents\NetBeansProjects\ClasesConsultorio\src\gestionconsultorio
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
+                /* outputStream to create PDF */
+                OutputStream outputStream = new FileOutputStream(new File(outputFile));
+                /* Write content to PDF file */
+                JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+                outputStream.close();
+                cantidadTarjetas += 1;
+               } catch (JRException | FileNotFoundException error) {
+                       //ex.printStackTrace();
+                        System.out.println("Error: "+ error.getMessage());
+               } catch (IOException ex) {
+                        System.out.println("Error: "+ ex.getMessage());
+               }  
+             
+            Alert resp = new Alert(Alert.AlertType.INFORMATION);
+            resp.setTitle("Informacion");
+            resp.setContentText(String.valueOf(cantidadTarjetas)+" Tarjetas generadas en Carpeta Reportes/Tarjetas/General ");
+            resp.showAndWait(); 
+            
         });
         
         GridPane gpPagosProyectados = new GridPane();

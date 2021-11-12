@@ -12,25 +12,25 @@ package copladb.DTO;
 public class tarjeta {
 
     private int idTarjeta;
-    private String Folio;
+    private String folio;
     private Integer idCliente;
     private String nomCliente;
     private String dirCliente;
-    private float Precio;
-    private float Enganche;
+    private float precio;
+    private float enganche;
     private Integer idVendedor;
-    private String NomVendedor;
-    private String Clasificacion;
-    private String TipoPago;
-    private String Region;
-    private String DiaCobro;
-    private float EnganchePend;
-    private float Saldo;
-    private String Fecha;
-    private float Pagos;
-    private String TipoPrecio;
-    private String FechaUltimoPago;
-    private float UltimoPago;
+    private String nomVendedor;
+    private String clasificacion;
+    private String tipoPago;
+    private String region;
+    private String diaCobro;
+    private float enganchePend;
+    private float saldo;
+    private String fecha;
+    private float pagos;
+    private String tipoPrecio;
+    private String fechaUltimoPago;
+    private float ultimoPago;
 
     public int getIdTarjeta() {
         return idTarjeta;
@@ -41,11 +41,11 @@ public class tarjeta {
     }
 
     public String getFolio() {
-        return Folio;
+        return folio;
     }
 
-    public void setFolio(String Folio) {
-        this.Folio = Folio;
+    public void setFolio(String folio) {
+        this.folio = folio;
     }
 
     public Integer getIdCliente() {
@@ -73,19 +73,19 @@ public class tarjeta {
     }
 
     public float getPrecio() {
-        return Precio;
+        return precio;
     }
 
-    public void setPrecio(float Precio) {
-        this.Precio = Precio;
+    public void setPrecio(float precio) {
+        this.precio = precio;
     }
 
     public float getEnganche() {
-        return Enganche;
+        return enganche;
     }
 
-    public void setEnganche(float Enganche) {
-        this.Enganche = Enganche;
+    public void setEnganche(float enganche) {
+        this.enganche = enganche;
     }
 
     public Integer getIdVendedor() {
@@ -97,101 +97,100 @@ public class tarjeta {
     }
 
     public String getNomVendedor() {
-        return NomVendedor;
+        return nomVendedor;
     }
 
-    public void setNomVendedor(String NomVendedor) {
-        this.NomVendedor = NomVendedor;
+    public void setNomVendedor(String nomVendedor) {
+        this.nomVendedor = nomVendedor;
     }
 
     public String getClasificacion() {
-        return Clasificacion;
+        return clasificacion;
     }
 
-    public void setClasificacion(String Clasificacion) {
-        this.Clasificacion = Clasificacion;
+    public void setClasificacion(String clasificacion) {
+        this.clasificacion = clasificacion;
     }
 
     public String getTipoPago() {
-        return TipoPago;
+        return tipoPago;
     }
 
-    public void setTipoPago(String TipoPago) {
-        this.TipoPago = TipoPago;
+    public void setTipoPago(String tipoPago) {
+        this.tipoPago = tipoPago;
     }
 
     public String getRegion() {
-        return Region;
+        return region;
     }
 
-    public void setRegion(String Region) {
-        this.Region = Region;
+    public void setRegion(String region) {
+        this.region = region;
     }
 
     public String getDiaCobro() {
-        return DiaCobro;
+        return diaCobro;
     }
 
-    public void setDiaCobro(String DiaCobro) {
-        this.DiaCobro = DiaCobro;
+    public void setDiaCobro(String diaCobro) {
+        this.diaCobro = diaCobro;
     }
 
     public float getEnganchePend() {
-        return EnganchePend;
+        return enganchePend;
     }
 
-    public void setEnganchePend(float EnganchePend) {
-        this.EnganchePend = EnganchePend;
+    public void setEnganchePend(float enganchePend) {
+        this.enganchePend = enganchePend;
     }
 
     public float getSaldo() {
-        return Saldo;
+        return saldo;
     }
 
-    public void setSaldo(float Saldo) {
-        this.Saldo = Saldo;
+    public void setSaldo(float saldo) {
+        this.saldo = saldo;
     }
 
     public String getFecha() {
-        return Fecha;
+        return fecha;
     }
 
-    public void setFecha(String Fecha) {
-        this.Fecha = Fecha;
+    public void setFecha(String fecha) {
+        this.fecha = fecha;
     }
 
     public float getPagos() {
-        return Pagos;
+        return pagos;
     }
 
-    public void setPagos(float Pagos) {
-        this.Pagos = Pagos;
+    public void setPagos(float pagos) {
+        this.pagos = pagos;
     }
 
     public String getTipoPrecio() {
-        return TipoPrecio;
+        return tipoPrecio;
     }
 
-    public void setTipoPrecio(String TipoPrecio) {
-        this.TipoPrecio = TipoPrecio;
+    public void setTipoPrecio(String tipoPrecio) {
+        this.tipoPrecio = tipoPrecio;
     }
 
     public String getFechaUltimoPago() {
-        return FechaUltimoPago;
+        return fechaUltimoPago;
     }
 
-    public void setFechaUltimoPago(String FechaUltimoPago) {
-        this.FechaUltimoPago = FechaUltimoPago;
+    public void setFechaUltimoPago(String fechaUltimoPago) {
+        this.fechaUltimoPago = fechaUltimoPago;
     }
 
     public float getUltimoPago() {
-        return UltimoPago;
+        return ultimoPago;
     }
 
-    public void setUltimoPago(float UltimoPagos) {
-        this.UltimoPago = UltimoPagos;
+    public void setUltimoPago(float ultimoPago) {
+        this.ultimoPago = ultimoPago;
     }
-    
-    
 
+    
 }

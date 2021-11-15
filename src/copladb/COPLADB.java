@@ -1904,6 +1904,7 @@ public class COPLADB extends Application {
         Label lbRegion = new Label("Region");
         Label lbVendedor = new Label("Vendedor: ");
         Label lbClasificacion = new Label("Clasificacion");
+        Label lbEstadoTarjeta = new Label("Estado Tarjeta: ");
         
        
         
@@ -1914,6 +1915,8 @@ public class COPLADB extends Application {
         TextField tfPrecio = new TextField();
         ObservableList<String> lstTipoPrecio = FXCollections.observableArrayList("Contado","Cre-Contado", "Credito");
         ComboBox cbTipoPrecio = new ComboBox(lstTipoPrecio);
+        ObservableList<String> lstEstadosTarjeta = FXCollections.observableArrayList("Activo","Inactivo", "Cerrada","Cancelado");
+        ComboBox cbEstadoTarjeta = new ComboBox(lstEstadosTarjeta);
         TextField tfEnganche = new TextField();
         tfEnganche.setPrefWidth(80);
         tfEnganche.setMinWidth(80);
@@ -3011,6 +3014,8 @@ public class COPLADB extends Application {
         gpDatosTarjeta.add(tfPendEnganche, 1, 6);
         gpDatosTarjeta.add(lbPagos, 0, 7);
         gpDatosTarjeta.add(tfPagos, 1, 7);
+        gpDatosTarjeta.add(lbEstadoTarjeta, 0, 8);
+        gpDatosTarjeta.add(cbEstadoTarjeta, 1, 8);
         gpDatosTarjeta.add(lbDiaCobro, 2, 1);
         gpDatosTarjeta.add(cbDiasCobro, 3, 1);
         gpDatosTarjeta.add(lbTipoPago, 2, 2);
@@ -5299,6 +5304,356 @@ public class COPLADB extends Application {
         
         vbPpal.getChildren().setAll(lbTitulo,gpSeleccionVendedor, gpGraficador, hbDatos);
         return vbPpal;
+    }
+    private VBox vClasificacionClientes(){
+        VBox vbPpal = new VBox();
+
+        Label lbTitulo = new Label("CLASIFICACION CLIENTES");
+        lbTitulo.getStyleClass().add("titulo-vista");
+        lbTitulo.setAlignment(Pos.CENTER);
+        lbTitulo.setPadding(new Insets(5, 5, 5, 5));
+        
+        //Componentes del grafico Cobradores
+        ObservableList<XYChart.Data> aListCobradores = FXCollections.observableArrayList(
+            new XYChart.Data("Sem. 1", 7),
+            new XYChart.Data("Sem. 2", 10),
+            new XYChart.Data("Sem. 3", 5),
+            new XYChart.Data("Sem. 4", 2),
+            new XYChart.Data("Sem. 5", 15),
+            new XYChart.Data("Sem. 6", 21)
+        );
+        //ObservableList<String> categorias = FXCollections.observableArrayList();
+        ObservableList<String> categoriasCob = FXCollections.observableArrayList("Sem. 1", "Sem. 2", "Sem. 3", "Sem. 4", "Sem. 5", "Sem. 6");
+
+        
+        
+        //Componentes del grafico Vendedores
+        ObservableList<XYChart.Data> aList = FXCollections.observableArrayList(
+            new XYChart.Data("Sem. 1", 7),
+            new XYChart.Data("Sem. 2", 10),
+            new XYChart.Data("Sem. 3", 5),
+            new XYChart.Data("Sem. 4", 2),
+            new XYChart.Data("Sem. 5", 15),
+            new XYChart.Data("Sem. 6", 21)
+        );
+        //ObservableList<String> categorias = FXCollections.observableArrayList();
+        ObservableList<String> categorias = FXCollections.observableArrayList("Sem. 1", "Sem. 2", "Sem. 3", "Sem. 4", "Sem. 5", "Sem. 6");
+
+        // Componentes de Seleccion
+
+        Label lbYear = new Label("Año: ");
+        TextField tfYear = new TextField();
+        tfYear.setPrefWidth(120);
+        
+        Label lbSemanInicial = new Label("Semana Inicial");
+        TextField tfSemanaInicial = new TextField();
+        tfSemanaInicial.setPrefWidth(220);
+        
+        Label lbSemanFinal = new Label("Semana Final");
+        TextField tfSemanaFinal = new TextField();
+        tfSemanaFinal.setPrefWidth(220);
+        
+        // etiquetas Estadisticas ventas
+        Label lbcuentaSemanasVentas =  new Label("Sem. de Ventas:");
+        lbcuentaSemanasVentas.setId("textoEstadisticas");
+        Label lbCuentaVentas =  new Label("Total Ventas:");
+        lbCuentaVentas.setId("textoEstadisticas");
+        Label lbsumaPrecios =  new Label("Suma Precios:");
+        lbsumaPrecios.setId("textoEstadisticas");
+        Label lbSumaEnganches =  new Label("Suma Enganches:");
+        lbSumaEnganches.setId("textoEstadisticas");
+        Label lbMinimo = new Label("Minimo :");
+        lbMinimo.setId("textoEstadisticas");
+        Label lbMaximo = new Label("Maximo: ");
+        lbMaximo.setId("textoEstadisticas");
+        Label lbPromedio = new Label("Promedio Ventas: ");
+        lbPromedio.setId("textoEstadisticas");
+        
+        //etiquetas Estadisticas cobros
+        Label lbCuentaCobros =  new Label("Cuenta Cobros:");
+        lbCuentaCobros.setId("textoEstadisticas");
+        Label lbSumaCobros =  new Label("Suma Cobros:");
+        lbSumaCobros.setId("textoEstadisticas");
+        Label lbMinimoCobros = new Label("Minimo :");
+        lbMinimoCobros.setId("textoEstadisticas");
+        Label lbMaximoCobros = new Label("Maximo: ");
+        lbMaximoCobros.setId("textoEstadisticas");
+        Label lbPromedioCobros = new Label("Promedio Cobros: "); 
+        lbPromedioCobros.setId("textoEstadisticas");
+        
+        TableView tvTablaSemanas = new TableView();
+        TableView tvTablaSemanasCob = new TableView();
+
+        Button btnBuscar = new Button ("Buscar");
+        btnBuscar.setOnAction((event) -> {
+            
+           //Calculo General de los Cobros 
+            lstWhere.clear();
+            lstWhere.add("Nombre is not null");
+            cobrador cbrDTO = cobraDAO.consultarCobradores(lstWhere).get(0);            
+            lstWhere.clear();
+            lstWhere.add("pr.idTarjeta is not null");
+            lstWhere.add("pr.Tipo in('Parcialidad', 'Abono')");
+            lstWhere.add("ta.idCobrador = "+String.valueOf(cbrDTO.getIdCobrador())); 
+            lstWhere.add("year = '"+tfYear.getText()+"' ");
+            lstWhere.add("cast(semana as integer ) between "+tfSemanaInicial.getText() +" and " + tfSemanaFinal.getText());              
+            lstTarjetasAsigPorSemanaConPagos = FXCollections.observableList(tarAsigDAO.consultarTarjetasPagosPorSemana(lstWhere));
+             tvTablaSemanasCob.setItems(lstTarjetasAsigPorSemanaConPagos);
+
+            //Calculo Estadisticas de Cobros
+            String strTotal = "Cuenta Cobros:"+String.valueOf(lstTarjetasAsigPorSemanaConPagos.size());
+            lbCuentaCobros.setText(strTotal);
+            float sumaMontosCobros =0;
+            int cuentaNumCobros = 0;
+            int minimoNumCobros = lstTarjetasAsigPorSemanaConPagos.get(0).getCuantosPagos();
+            int maximoNumCobros = 0;
+            for (tarjetasAsigPorSemanaConPagosDTO t : lstTarjetasAsigPorSemanaConPagos){
+               sumaMontosCobros += t.getSumaMontos();
+               cuentaNumCobros += t.getCuantosPagos();
+               if (maximoNumCobros<t.getCuantosPagos()) maximoNumCobros = t.getCuantosPagos();
+               if (minimoNumCobros>t.getCuantosPagos()) minimoNumCobros = t.getCuantosPagos();
+            }
+            float promedio = cuentaNumCobros/lstTarjetasAsigPorSemanaConPagos.size();
+            lbPromedioCobros.setText("Promedio Cobros: "+String.valueOf(promedio));
+            lbMaximoCobros.setText("Maximo: "+String.valueOf(maximoNumCobros));
+            lbMinimoCobros.setText("Minimo :"+String.valueOf(minimoNumCobros));
+            lbSumaCobros.setText("Suma Cobros:"+String.valueOf(sumaMontosCobros));
+              
+            if (!aListCobradores.isEmpty())aListCobradores.clear();
+            if (!categoriasCob.isEmpty())categoriasCob.clear();
+            for (tarjetasAsigPorSemanaConPagosDTO t : lstTarjetasAsigPorSemanaConPagos){
+                String strSemana = "Sem.";
+                String concat = strSemana.concat(t.getSemana());
+                System.out.println("Semana: "+concat);
+                categoriasCob.add(concat);
+                int totalPagosSemana = t.getCuantosPagos();
+                System.out.println("TotalporSemana: "+String.valueOf(totalPagosSemana) );
+                aListCobradores.add(new XYChart.Data(concat, totalPagosSemana));
+            }             
+            
+            
+           //Calculo General de las ventas 
+            lstWhere.clear();
+            lstWhere.add("Nombre is not null ");
+            vendedor vendDTO = venDAO.consultarVendedor(lstWhere).get(0);            
+            lstWhere.clear();
+            lstWhere.add("ta.idTarjeta is not null");
+            lstWhere.add("ta.idVendedor = "+String.valueOf(vendDTO.getIdVendedor())); 
+            lstWhere.add("year = '"+tfYear.getText()+"' ");
+            lstWhere.add("cast(semana as integer ) between "+tfSemanaInicial.getText() +" and " + tfSemanaFinal.getText());              
+            lstTarjetasPorSemanaConEnganches = FXCollections.observableList(tarDAO.consultarTarjetasEnganchesPorSemana(lstWhere));
+            tvTablaSemanas.setItems(lstTarjetasPorSemanaConEnganches);
+            
+            //Calculo Estadisticas de ventas
+            String strTotalVentas = "Sem. de Ventas:"+String.valueOf(lstTarjetasPorSemanaConEnganches.size());
+            lbcuentaSemanasVentas.setText(strTotalVentas);
+            float sumaMontosEnganches =0;
+            float sumaMontosPrecios =0;
+            int cuentaNumVentas = 0;
+            int minimoNumVentas = lstTarjetasPorSemanaConEnganches.get(0).getCuentaEngaches();
+            int maximoNumVentas = 0;
+            for (tarjetaPorSemana t : lstTarjetasPorSemanaConEnganches){
+               sumaMontosEnganches += t.getSumaEnganches();
+               sumaMontosPrecios += t.getSumaPrecios();
+               cuentaNumVentas += t.getCuentaEngaches();
+               if (maximoNumVentas<t.getCuentaEngaches()) maximoNumVentas = t.getCuentaEngaches();
+               if (minimoNumVentas>t.getCuentaEngaches()) minimoNumVentas = t.getCuentaEngaches();
+            }
+            float promedioVentas = cuentaNumVentas/lstTarjetasPorSemanaConEnganches.size();
+            lbCuentaVentas.setText("Total Ventas: "+String.valueOf(cuentaNumVentas));
+            lbPromedio.setText("Promedio Ventas: "+String.valueOf(promedioVentas));
+            lbMaximo.setText("Maximo: "+String.valueOf(maximoNumVentas));
+            lbMinimo.setText("Minimo :"+String.valueOf(minimoNumVentas));
+            lbSumaEnganches.setText("Suma Enganches:"+String.valueOf(sumaMontosEnganches));
+            lbsumaPrecios.setText("Suma Precios:"+String.valueOf(sumaMontosPrecios));
+                    
+                    
+            if (!aList.isEmpty())aList.clear();
+            if (!categorias.isEmpty())categorias.clear();
+            for (tarjetaPorSemana t : lstTarjetasPorSemanaConEnganches){
+                String strSemana = "Sem.";
+                String concat = strSemana.concat(t.getSemana());
+                System.out.println("Semana: "+concat);
+                categorias.add(concat);
+                int totalPagosSemana = t.getCuentaEngaches();
+                System.out.println("TotalporSemana: "+String.valueOf(totalPagosSemana) );
+                aList.add(new XYChart.Data(concat, totalPagosSemana));
+            }
+            
+        });
+        
+        // Grafica para evaluar el desempeño del cobrador por semana
+        Label lbGraficaCobradores = new Label("Grafica Cobradores: ");
+        ObservableList<XYChart.Series> seriesListCobradores = FXCollections.observableArrayList();
+        
+ 
+        seriesListCobradores.add(new XYChart.Series("Cant. Semanas", aListCobradores));
+
+        CategoryAxis xAxCob = new CategoryAxis(categoriasCob);
+        Axis yAxisCob = new NumberAxis();// ("Cantidad", 0, 50, 5);
+        
+        BarChart bcGraficaCobrador = new BarChart(xAxCob, yAxisCob, seriesListCobradores);
+        bcGraficaCobrador.setMinSize(500,180);
+        bcGraficaCobrador.setMaxSize(500,180);
+        bcGraficaCobrador.setPrefSize(500,180);
+        
+        // Grafica para evaluar el desempeño del vendedor por semana
+        Label lbGraficaVendedores = new Label("Grafica Vendedores: ");
+        ObservableList<XYChart.Series> seriesList = FXCollections.observableArrayList();
+        
+ 
+        
+        seriesList.add(new XYChart.Series("Cant. Semanas", aList));
+
+        CategoryAxis xAx = new CategoryAxis(categorias);
+        Axis yAxis = new NumberAxis();// ("Cantidad", 0, 50, 5);
+        
+        BarChart bcGraficaVendedor = new BarChart(xAx, yAxis, seriesList);
+        bcGraficaVendedor.setMinSize(500,180);
+        bcGraficaVendedor.setMaxSize(500,180);
+        bcGraficaVendedor.setPrefSize(500,180);
+       
+        //Tabla Semanas Cobradores
+        TableColumn CobSemanaColum = new TableColumn("Semana");
+        CobSemanaColum.setPrefWidth(300);
+        CobSemanaColum.setCellValueFactory(new PropertyValueFactory<>("semana"));
+  
+        TableColumn CobCantidadColum = new TableColumn("Cantidad");
+        CobCantidadColum.setPrefWidth(80);
+        CobCantidadColum.setCellValueFactory(new PropertyValueFactory<>("cuantosPagos"));
+        
+        TableColumn MontoCobradoColum = new TableColumn("Monto Cobrado");
+        MontoCobradoColum.setPrefWidth(110);
+        MontoCobradoColum.setCellValueFactory(new PropertyValueFactory<>("sumaMontos"));
+        
+        
+        tvTablaSemanasCob.setPrefSize(490, 180);
+        tvTablaSemanasCob.getColumns().addAll(CobSemanaColum, CobCantidadColum, MontoCobradoColum);
+        
+        //Tabla Semanas Vendedores       
+        TableColumn SemanaColum = new TableColumn("Semana");
+        SemanaColum.setPrefWidth(80);
+        SemanaColum.setCellValueFactory(new PropertyValueFactory<>("semana"));
+  
+        TableColumn CantidadEnganchesColum = new TableColumn("Cantidad");
+        CantidadEnganchesColum.setPrefWidth(80);
+        CantidadEnganchesColum.setCellValueFactory(new PropertyValueFactory<>("cuentaEngaches"));
+
+        TableColumn CantidadSumaPreciosColum = new TableColumn("Suma Precios");
+        CantidadSumaPreciosColum.setPrefWidth(110);
+        CantidadSumaPreciosColum.setCellValueFactory(new PropertyValueFactory<>("sumaPrecios"));
+        
+        TableColumn SumaEnganchesColum = new TableColumn("Suma Enganches");
+        SumaEnganchesColum.setPrefWidth(110);
+        SumaEnganchesColum.setCellValueFactory(new PropertyValueFactory<>("sumaEnganches"));
+        
+        tvTablaSemanas.setPrefSize(380, 180);
+        tvTablaSemanas.getColumns().addAll(SemanaColum, CantidadEnganchesColum, CantidadSumaPreciosColum, SumaEnganchesColum);
+        
+        // Layouts
+        GridPane gpSeleccionVendedor = new GridPane();
+        gpSeleccionVendedor.setPadding(new Insets(5,5,5,5));
+        gpSeleccionVendedor.setVgap(10);
+        gpSeleccionVendedor.setHgap(10);
+        gpSeleccionVendedor.add(lbYear, 2, 0);
+        gpSeleccionVendedor.add(tfYear, 3, 0);
+        gpSeleccionVendedor.add(lbSemanInicial, 4, 0);
+        gpSeleccionVendedor.add(tfSemanaInicial, 5, 0);
+        gpSeleccionVendedor.add(lbSemanFinal, 6, 0);
+        gpSeleccionVendedor.add(tfSemanaFinal, 7, 0);
+        gpSeleccionVendedor.add(btnBuscar, 8, 0);
+
+        GridPane gpGraficadorCobrador = new GridPane();
+        gpGraficadorCobrador.setPadding(new Insets(5,5,5,5));
+        gpGraficadorCobrador.setVgap(10);
+        gpGraficadorCobrador.setHgap(10);
+        gpGraficadorCobrador.add(lbGraficaCobradores, 0, 0);
+        gpGraficadorCobrador.add(bcGraficaCobrador, 0, 1);
+
+        GridPane gpGraficadorVendedor = new GridPane();
+        gpGraficadorVendedor.setPadding(new Insets(5,5,5,5));
+        gpGraficadorVendedor.setVgap(10);
+        gpGraficadorVendedor.setHgap(10);
+        gpGraficadorVendedor.add(lbGraficaVendedores, 0, 0);
+        gpGraficadorVendedor.add(bcGraficaVendedor, 0, 1);
+        
+        // Tablas y Estadisticas de los cobradores
+        GridPane gpTablaSemanasCob = new GridPane();
+        gpTablaSemanasCob.setPadding(new Insets(5,5,5,5));
+        gpTablaSemanasCob.setVgap(5);
+        gpTablaSemanasCob.setHgap(6);
+        gpTablaSemanasCob.add(tvTablaSemanasCob, 0, 0);
+        
+        GridPane gpEstadisticasCob = new GridPane();
+        gpEstadisticasCob.getStyleClass().add("gridPane-estadisticas");
+        gpEstadisticasCob.setPadding(new Insets(5,5,5,5));
+        gpEstadisticasCob.setVgap(10);
+        gpEstadisticasCob.setHgap(10);
+        gpEstadisticasCob.add(lbSumaCobros,0,0);
+        gpEstadisticasCob.add(lbCuentaCobros,0,1);
+        gpEstadisticasCob.add(lbMaximoCobros,0,2);
+        gpEstadisticasCob.add(lbMinimoCobros,0,3);
+        gpEstadisticasCob.add(lbPromedioCobros,0,4);
+        
+        // Tablas y Estadisticas de los vendedores
+        GridPane gpTablaSemanas = new GridPane();
+        gpTablaSemanas.setPadding(new Insets(5,5,5,5));
+        gpTablaSemanas.setVgap(5);
+        gpTablaSemanas.setHgap(6);
+        gpTablaSemanas.add(tvTablaSemanas, 0, 0);
+        
+        GridPane gpEstadisticas = new GridPane();
+        //gpEstadisticas.setStyle("-fx-background-color: yellow; ");
+        gpEstadisticas.getStyleClass().add("gridPane-estadisticas");
+        gpEstadisticas.setPadding(new Insets(5,5,5,5));
+        gpEstadisticas.setVgap(10);
+        gpEstadisticas.setHgap(10);
+        gpEstadisticas.add(lbcuentaSemanasVentas,0,0);
+        gpEstadisticas.add(lbCuentaVentas,0,1);
+        gpEstadisticas.add(lbSumaEnganches,0,2);
+        gpEstadisticas.add(lbsumaPrecios,0,3);
+        gpEstadisticas.add(lbMaximo,0,4);
+        gpEstadisticas.add(lbMinimo,0,5);
+        gpEstadisticas.add(lbPromedio,0,6);
+        
+        VBox vbVendedores = new VBox();
+        vbVendedores.setPadding(new Insets(5,5,5,5));
+        vbVendedores.getChildren().addAll(gpGraficadorVendedor, gpTablaSemanas, gpEstadisticas);
+        
+        VBox vbCobradores = new VBox();
+        vbCobradores.setPadding(new Insets(5,5,5,5));
+        vbCobradores.getChildren().addAll(gpGraficadorCobrador, gpTablaSemanasCob, gpEstadisticasCob);
+        
+        HBox hbGraficas = new HBox();
+        hbGraficas.setPadding( new Insets(5,5,5,5));
+        hbGraficas.getChildren().addAll(vbVendedores, vbCobradores);
+
+        //HBox hbDatos = new HBox();
+        //hbDatos.getChildren().setAll(gpTablaSemanas,gpEstadisticas, gpTablaSemanasCob, gpEstadisticasCob);
+        
+        vbPpal.getChildren().setAll(lbTitulo,gpSeleccionVendedor, hbGraficas);
+        return vbPpal;
+    }
+    private Map ClasificaClientes(){
+         Map<String, Object> hmClasificacion = new HashMap<>();
+         List<String> strClasificacion = new ArrayList<>();
+         List<tarjeta> lstTarjetas = new ArrayList<>();
+         List<pagosProyectados> lstPagosProyectados = new ArrayList<>();
+         List<pagosRealizados> lstPagosRealizados = new ArrayList<>();
+         LocalDate ldFechaActual = LocalDate.now();
+         lstWhere.clear();
+         lstWhere.add("idTarjeta is not null ");
+         lstTarjetas.addAll(tarDAO.consultarTarjetas(lstWhere));
+         for (tarjeta t: lstTarjetas){
+             lstWhere.clear();
+             lstWhere.add("idTarjeta ="+t.getIdTarjeta());
+             lstWhere.add("idTarjeta ="+t.getIdTarjeta());
+             lstPagosProyectados.addAll(pagProyDAO.consultarPagosProyectados(lstWhere));
+             lstPagosRealizados.addAll(pagReaDAO.consultarPagosRealizados(lstWhere));
+             
+         }
+         
+         return hmClasificacion;
     }
     
     //Modulos de Vendedor

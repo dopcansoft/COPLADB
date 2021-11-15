@@ -71,6 +71,7 @@ public class tarjetaDAO {
                 tarj.setFecha(rs.getString(13));
                 tarj.setPagos(rs.getFloat(14));
                 tarj.setTipoPrecio(rs.getString(15));
+                tarj.setEstado("Activo");
 
              }
              con.close();
@@ -98,7 +99,7 @@ public class tarjetaDAO {
         from tarjeta ta  where idVendedor = 3 and year ='2021' and cast(semana as integer ) between 1 and 20 group by semana
         */
         String sql = "select ta.idVendedor, strfTime('%Y',ta.Fecha) as year, strfTime('%W',ta.Fecha) as semana, "
-                + "sum(ta.precio) as sumaPrecio, sum(ta.Enganche) as sumaEnganches, count(ta.Enganche) as cuentaEnganches  "
+                + "sum(ta.precio) as sumaPrecio, sum(ta.Enganche) as sumaEnganches, count(ta.Enganche) as cuentaEnganches, ta.estado "
                 + "from tarjeta ta  where "+Filtro.toString()+ " group by semana";
         System.out.println(sql);
         try (

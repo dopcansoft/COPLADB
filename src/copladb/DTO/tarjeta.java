@@ -31,6 +31,7 @@ public class tarjeta {
     private String tipoPrecio;
     private String fechaUltimoPago;
     private float ultimoPago;
+    private String estado;
 
     public int getIdTarjeta() {
         return idTarjeta;
@@ -190,6 +191,14 @@ public class tarjeta {
 
     public void setUltimoPago(float ultimoPago) {
         this.ultimoPago = ultimoPago;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     

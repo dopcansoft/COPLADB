@@ -2483,6 +2483,7 @@ public class COPLADB extends Application {
         btnModificarPagoProyectado.setId("btnIconoUpdate");
         Button btnEliminarPagoProyectado = new Button("E");
         btnEliminarPagoProyectado.setId("btnIconoRemove");
+        Button btnProyeccionPagos = new Button("Proyectar Pagos");
         
         TableView tvPagosProyectados = new TableView();
         tvPagosProyectados.setPrefSize(500, 300);
@@ -2535,6 +2536,46 @@ public class COPLADB extends Application {
                 tfMonto.setText(null);
                 cbEstado.setValue(null);
             }
+        });
+        
+
+        btnProyeccionPagos.setOnMouseClicked((event) -> {
+            String folioTarjeta = tarDTO.getFolio();
+            int idTarjeta = tarDTO.getIdTarjeta();
+            LocalDate ldFechaRegistro = LocalDate.parse(tarDTO.getFecha());
+            LocalDate f = ldFechaRegistro;
+            String diasCobro = tarDTO.getDiaCobro();
+            float  tempPrecio = tarDTO.getPrecio();
+            float tempEnganche = tarDTO.getEnganche();
+            float tempPagos = tarDTO.getPagos();
+            String tipoPagos = tarDTO.getTipoPago();
+            String tipoPrecio = tarDTO.getTipoPrecio();
+            float cantSeriada = tempPrecio-tempEnganche;
+            int pagosResiduo = (int)(cantSeriada % tempPagos);
+            int numPagos = (int)(cantSeriada / tempPagos);
+            System.out.println("residuo de Pagos -->"+pagosResiduo);
+            System.out.println("Numero Pagos -->"+numPagos);
+            System.out.println("Tarjeta: Folio, ID, Fecha "+folioTarjeta+", "+ idTarjeta+", "+ ldFechaRegistro.toString());
+            System.out.println("Tarjeta: Dias Cobro, Precio, Enganche, tipoPago, TipoPrecio "+diasCobro+", "+ tempPrecio+", "+ tempEnganche+", "+
+                    tipoPagos+", "+tipoPrecio );
+            for (int i=1; i <= numPagos; i++){
+                String fechaSig = siguienteDia(f, numeroDia(diasCobro), tipoPagos);
+                pagProyDAO.insertarPagoProyectado(fechaSig, tempPagos, idTarjeta, "Activo");
+                f = LocalDate.parse(fechaSig);
+            }
+            if (pagosResiduo != 0){
+                String fechaSig = siguienteDia(f, numeroDia(diasCobro), tipoPagos);
+                pagProyDAO.insertarPagoProyectado(fechaSig, pagosResiduo, idTarjeta, "Activo");              
+            }
+            if (!lstobPagProyectados.isEmpty()){
+                lstobPagProyectados.clear();
+                tvPagosProyectados.setItems(lstobPagProyectados);
+            }
+            lstWhere.clear();
+            lstWhere.add("idTarjeta = "+ tarDTO.getIdTarjeta());
+            lstobPagProyectados.addAll(pagProyDAO.consultarPagosProyectados(lstWhere));
+            tvPagosProyectados.setItems(lstobPagProyectados);
+            
         });
         
         tvPagosProyectados.setOnMouseClicked((event) -> {
@@ -2873,6 +2914,7 @@ public class COPLADB extends Application {
         gpPagosProyectados.add(btnAgregarPagoProyectado, 2, 3);
         gpPagosProyectados.add(btnModificarPagoProyectado, 3, 3);
         gpPagosProyectados.add(btnEliminarPagoProyectado, 4, 3);
+        gpPagosProyectados.add(btnProyeccionPagos, 5, 3);
         
         GridPane gpPagosRealizados = new GridPane();
         gpPagosRealizados.setVgap(10);
@@ -2928,6 +2970,10 @@ public class COPLADB extends Application {
             if (!lstobPagRealizados.isEmpty()){
                 lstobPagRealizados.clear();
                 tvPagosRealizado.setItems(lstobPagRealizados);
+            }
+            if (!lstobPagProyectados.isEmpty()){
+                lstobPagProyectados.clear();
+                tvPagosRealizado.setItems(lstobPagProyectados);
             }
             tarDTO = (tarjeta) tvTarjetas.getSelectionModel().getSelectedItem();
             tfFolio.setText(tarDTO.getFolio());
@@ -9556,8 +9602,78 @@ public class COPLADB extends Application {
         vbPpal.getChildren().addAll(lbTituloVista, hbBuscar);
        
         return vbPpal;  
-    }     
+    }   
     
+    //Funciones Utilerias
+    
+    private String siguienteDia( LocalDate fechaInicial, int dia, String PeriodoPagos){
+       String fecha ="";
+       int numeroDia =0;
+       LocalDate fechaSiguiente=null;
+       switch( PeriodoPagos){
+           case "Semanal":
+            System.out.println("Semanal");
+            fechaSiguiente = fechaInicial.plusDays(7);
+            numeroDia = fechaSiguiente.getDayOfWeek().getValue();
+            while (numeroDia != dia){
+                fechaSiguiente = fechaSiguiente.plusDays(1);
+                numeroDia = fechaSiguiente.getDayOfWeek().getValue();
+            };
+            break;
+           case "Quincenal":
+            System.out.println("Quincenal");
+            fechaSiguiente = fechaInicial.plusDays(15);
+            numeroDia = fechaSiguiente.getDayOfWeek().getValue();
+            while (numeroDia != dia){
+                fechaSiguiente = fechaSiguiente.plusDays(1);
+                numeroDia = fechaSiguiente.getDayOfWeek().getValue();
+            };
+            break;
+           case "Mensual":
+            System.out.println("Mensual");
+            fechaSiguiente = fechaInicial.plusDays(30);
+            numeroDia = fechaSiguiente.getDayOfWeek().getValue();
+            while (numeroDia != dia){
+                fechaSiguiente = fechaSiguiente.plusDays(1);
+                numeroDia = fechaSiguiente.getDayOfWeek().getValue();
+            };
+            break;
+       }
+       
+        System.out.println("Fecha + 7 dias :"+ fechaSiguiente.toString());
+       return fechaSiguiente.toString();
+    }
+    private int numeroDia(String dia){
+        int numdia = 0;
+        switch (dia) {
+            case "Lunes":
+                numdia = 1;
+                break;
+            case "Martes":
+                numdia = 2;
+                break;
+            case "Miercoles":
+                numdia = 3;
+                break;
+            case "Jueves":
+                numdia = 4;
+                break;
+            case "Viernes":
+                numdia = 5;
+                break;
+            case "Sabado":
+                numdia = 6;
+                break;
+            case "Domingo":
+                numdia = 7;
+                break;
+            default : 
+                numdia = 0;
+                break;
+        }
+        
+        return numdia;
+    }
     /**
      * @param args the command line arguments
      */

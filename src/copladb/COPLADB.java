@@ -1846,7 +1846,11 @@ public class COPLADB extends Application {
         ultimoPagoColum.setCellValueFactory(new PropertyValueFactory<>("UltimoPago"));
         ultimoPagoColum.setPrefWidth(50);
         
-        tvTarjetas.getColumns().addAll(folioTarjetaColum, fechaTarjetaColumna, precioColum, saldoColum, engancheColum, ClienteColumna, 
+        TableColumn estadoTArjetaColum = new TableColumn("estado Tarjeta");
+        estadoTArjetaColum.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        estadoTArjetaColum.setPrefWidth(50);
+        
+        tvTarjetas.getColumns().addAll(folioTarjetaColum, estadoTArjetaColum, fechaTarjetaColumna, precioColum, saldoColum, engancheColum, ClienteColumna, 
                                        regionColumna, pagosColum);
         
         MenuItem item = new MenuItem("Copiar Todo");
@@ -1915,7 +1919,7 @@ public class COPLADB extends Application {
         TextField tfPrecio = new TextField();
         ObservableList<String> lstTipoPrecio = FXCollections.observableArrayList("Contado","Cre-Contado", "Credito");
         ComboBox cbTipoPrecio = new ComboBox(lstTipoPrecio);
-        ObservableList<String> lstEstadosTarjeta = FXCollections.observableArrayList("Activo","Inactivo", "Cerrada","Cancelado");
+        ObservableList<String> lstEstadosTarjeta = FXCollections.observableArrayList("Activo","Inactiva 1", "Inactiva 2", "Cerrada", "Cancelado", "Descuento", "Faltante");
         ComboBox cbEstadoTarjeta = new ComboBox(lstEstadosTarjeta);
         TextField tfEnganche = new TextField();
         tfEnganche.setPrefWidth(80);
@@ -1994,6 +1998,7 @@ public class COPLADB extends Application {
         //Label lbCantXRecupValor = new Label("$ 00.00");
         
         btnFiltrarFecha.setOnAction((event) -> {
+            totalCobrado = 0.0f;
             ObservableList<tarjeta> lstItems = FXCollections.observableArrayList(tvTarjetas.getItems());            
             Iterator<tarjeta> it = lstItems.iterator();
             while(it.hasNext()){
@@ -2063,6 +2068,12 @@ public class COPLADB extends Application {
         });
         
         btnBuscaTarjetas.setOnMouseClicked((event) -> {
+            totalCobrado = 0.0f;
+            lbCantCobradaValor.setText("$ 00.00");
+            comision = 0.0f;
+            tfComision.setText("");
+            PorComision = (float) 0.12;
+            tfPorcentajeComision.setText("0.12");
             tfFolio.setText("");
             dpFecha.setValue(null);
             tfPrecio.setText("");
@@ -3798,7 +3809,11 @@ public class COPLADB extends Application {
         pagosColum.setCellValueFactory(new PropertyValueFactory<>("Pagos"));
         pagosColum.setPrefWidth(50);
         
-        tvTarjetasSinAsignar.getColumns().addAll(folioTarjetaColum, fechaTarjetaColumna, precioColum, engancheColum, saldoColum,  ClienteColumna, 
+        TableColumn estadoTarjetaColum = new TableColumn("estado Tarjeta");
+        estadoTarjetaColum.setCellValueFactory(new PropertyValueFactory<>("EstadoTarjeta"));
+        estadoTarjetaColum.setPrefWidth(50);
+        
+        tvTarjetasSinAsignar.getColumns().addAll(folioTarjetaColum, estadoTarjetaColum, fechaTarjetaColumna, precioColum, engancheColum, saldoColum,  ClienteColumna, 
                 regionColumna, pagosColum);
         
         MenuItem item = new MenuItem("Copiar Todo");
@@ -3915,7 +3930,7 @@ public class COPLADB extends Application {
             tvTarjetasAsignadas.setContextMenu(menuContextTarjetaAsignadas);
             
         lstWhere.clear();
-        lstWhere.add("t1.idTarjeta is not null");
+        lstWhere.add("t1.idTarjeta is not null and estadoTarjetas");
         if(!tvTarjetasAsignadas.getItems().isEmpty()) tvTarjetasAsignadas.getItems().clear();
         tvTarjetasAsignadas.setItems(FXCollections.observableArrayList(tarAsigDAO.consultarTarjetasAsignadas(lstWhere)));
         tfTarjetasAsignadas.setText(String.valueOf(tvTarjetasAsignadas.getItems().size()));

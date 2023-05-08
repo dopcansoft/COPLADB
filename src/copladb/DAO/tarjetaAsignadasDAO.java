@@ -182,7 +182,7 @@ public class tarjetaAsignadasDAO {
         
         String sql = "select t1.idTarjeta, t1.Folio, t1.idCliente, t1.Precio, t1.Enganche, t1.idVendedor, t1.Clasificacion, t1.TipoPago, t1.Region, "
                 + "t1.DiaCobro, t1.EnganchePend, t1.Saldo, t1.Fecha, t1.Pagos, t1.TipoPrecio, t2.idAsignacion, t2.idTarjeta, t2.idCobrador, t2.fecha, "
-                + "t2.EstadoRecibido, t2.EstadoEntregado from Tarjeta as t1 left join TarjetasAsignadas as t2 on t1.idTarjeta = t2.idTarjeta where "+Filtro.toString();
+                + "t2.EstadoRecibido, t2.EstadoEntregado, t1.estado from Tarjeta as t1 left join TarjetasAsignadas as t2 on t1.idTarjeta = t2.idTarjeta where "+Filtro.toString();
         System.out.println(sql);
         try (
             Connection con = conecta.conectaDB();
@@ -218,6 +218,7 @@ public class tarjetaAsignadasDAO {
                 //tarj.setIdAsignado(rs.getInt(17));
                 tarj.setIdCobrador(rs.getInt(18));
                 tarj.setFechaAsignado(rs.getString(19));
+                tarj.setEstadoTarjeta(rs.getString(22));
                 
                 lstTarjeta.add(tarj);
              }

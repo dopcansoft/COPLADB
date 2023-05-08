@@ -33,6 +33,7 @@ public class tarjetaAsignadas {
         private String Fecha;
         private float Pagos;
         private String TipoPrecio;
+        private String EstadoTarjeta;
 
     public int getIdAsignado() {
         return idAsignado;
@@ -218,5 +219,13 @@ public class tarjetaAsignadas {
         this.TipoPrecio = TipoPrecio;
     }
 
-        
+    public String getEstadoTarjeta() {
+        return EstadoTarjeta;
+    }
+
+    public void setEstadoTarjeta(String EstadoTarjeta) {
+        this.EstadoTarjeta = EstadoTarjeta;
+    }
+
+       
 }

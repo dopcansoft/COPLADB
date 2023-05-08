@@ -298,7 +298,7 @@ public class tarjetaDAO {
         }
         Conexion conecta = new Conexion("cobranzaDB.db");
         String sql = "select t.idTarjeta, t.Folio, t.idCliente, C.Direccion, C.Nombre as nomCliente, t.Precio, "
-                + "t.Enganche, t.idVendedor, t.Clasificacion, t.TipoPago, t.Region, t.DiaCobro, t.EnganchePend, t.Saldo, t.Fecha, t.Pagos, t.TipoPrecio "
+                + "t.Enganche, t.idVendedor, t.Clasificacion, t.TipoPago, t.Region, t.DiaCobro, t.EnganchePend, t.Saldo, t.Fecha, t.Pagos, t.TipoPrecio, t.estado "
                 + "from Tarjeta as t left join Clientes as C on t.idCliente = C.idCliente where "+Filtro.toString();
         System.out.println(sql);
         try (
@@ -332,6 +332,7 @@ public class tarjetaDAO {
                 tarj.setFecha(rs.getString(15));
                 tarj.setPagos(rs.getFloat(16));
                 tarj.setTipoPrecio(rs.getString(17));
+                tarj.setEstado(rs.getString(18));
                 lstTarjeta.add(tarj);
              }
              con.close();
